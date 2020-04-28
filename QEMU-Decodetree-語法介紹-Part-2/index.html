@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>QEMU Decodetree 語法介紹 (Part 2.) - 0xc0de</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+
+
+<meta name="description" content="C, QEMU, Linux Kernel and RISC-V">
+
+
+
+<meta name="keywords" content="c,qemu,linux,kernel,risc-v">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+
+<meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="0xc0de" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                <img src="/images/logo.png" alt="" height="28">
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            QEMU Decodetree 語法介紹 (Part 2.)
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2020-02-01T06:57:43.000Z" itemprop="datePublished">2月 1 2020</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/QEMU/">QEMU</a><span>></span><a class="article-category-link" href="/categories/QEMU/RISC-V/">RISC-V</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            19 分钟 讀完 (約 2828 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><blockquote>
+<p>&#x26A0;&#xFE0F; &#x672C;&#x6587;&#x6240;&#x4F7F;&#x7528;&#x7684; QEMU &#x7248;&#x672C;&#x70BA;&#xFF1A;<code>v4.2.0</code></p>
+</blockquote>
+<p>&#x5EF6;&#x7E8C; <a href="/QEMU-Decodetree-%E8%AA%9E%E6%B3%95%E4%BB%8B%E7%B4%B9-Part-1/" title="Part 1.">Part 1.</a> &#x4E00;&#x6587;&#xFF0C;&#x672C;&#x6587;&#x5C07;&#x7E7C;&#x7E8C;&#x4ECB;&#x7D39; <code>Decodetree</code> &#x4E2D;&#x7684; <code>Patterns</code> &#x53CA; <code>Pattern Groups</code> &#x8A9E;&#x6CD5;&#x3002;</p>
+<a id="more"></a>
+
+<hr>
+<h1 id="Patterns"><a href="#Patterns" class="headerlink" title="Patterns"></a>Patterns</h1><p><code>Pattern</code> &#x5BE6;&#x969B;&#x5B9A;&#x7FA9;&#x4E86;&#x4E00;&#x500B;&#x6307;&#x4EE4;&#x7684; decode &#x65B9;&#x5F0F;&#x3002;<code>Decodetree</code> &#x6703;&#x6839;&#x64DA; <code>Patterns</code> &#x7684;&#x5B9A;&#x7FA9;&#xFF0C;&#x4F86;&#x52D5;&#x614B;&#x7522;&#x751F;&#x51FA;&#x5C0D;&#x61C9;&#x7684; <code>switch-case</code> decode &#x5224;&#x65B7;&#x5F0F;&#x3002;</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pat_def      := identifier ( pat_elt )+</span><br><span class="line">pat_elt      := fixedbit_elt | field_elt | field_ref | args_ref | fmt_ref | const_elt</span><br><span class="line">fmt_ref      := &apos;@&apos; identifier</span><br><span class="line">const_elt    := identifier &apos;=&apos; number</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x5176;&#x8A9E;&#x6CD5;&#x7531;&#x4F7F;&#x7528;&#x8005;&#x6240;&#x5B9A;&#x7FA9;&#x7684; <code>identifier</code>&#xFF0C;&#x96A8;&#x5F8C;&#x7DCA;&#x63A5;&#x8457;&#x4E00;&#x500B;&#x4EE5;&#x4E0A;&#x7684; <code>pat_elt</code>&#x3002;</p>
+<ul>
+<li><code>identifier</code> &#x53EF;&#x7531;&#x958B;&#x767C;&#x8005;&#x81EA;&#x8A02;&#xFF0C;&#x5982;&#xFF1A;<code>addl_r</code>&#x3001;<code>addli</code> &#x2026; &#x7B49;&#x3002;</li>
+<li><code>pat_elt</code> &#x5247;&#x53EF;&#x4EE5;&#x63A1;&#x7528;&#x4EE5;&#x4E0B;&#x4E0D;&#x540C;&#x7684;&#x8A9E;&#x6CD5;&#xFF1A;<ul>
+<li><code>fixedbit_elt</code> &#x8207;&#x5728; <code>Format</code> &#x4E2D; <code>fixedbit_elt</code> &#x7684;&#x5B9A;&#x7FA9;&#x76F8;&#x540C;&#x3002;</li>
+<li><code>field_elt</code> &#x8207;&#x5728; <code>Format</code> &#x4E2D; <code>field_elt</code> &#x7684;&#x5B9A;&#x7FA9;&#x76F8;&#x540C;&#x3002;</li>
+<li><code>field_ref</code> &#x8207;&#x5728; <code>Format</code> &#x4E2D; <code>field_ref</code> &#x7684;&#x5B9A;&#x7FA9;&#x76F8;&#x540C;&#x3002;</li>
+<li><code>args_ref</code> &#x8207;&#x5728; <code>Format</code> &#x4E2D; <code>args_ref</code> &#x7684;&#x5B9A;&#x7FA9;&#x76F8;&#x540C;&#x3002;</li>
+<li><code>fmt_ref</code> &#x76F4;&#x63A5;&#x53C3;&#x8003;&#x4E00;&#x500B;&#x88AB;&#x5B9A;&#x7FA9;&#x904E;&#x7684; <a href="/QEMU-Decodetree-&#x8A9E;&#x6CD5;&#x4ECB;&#x7D39;-Part-1/#Formats">Format</a>&#x3002;</li>
+<li><code>const_elt</code> &#x53EF;&#x4EE5;&#x76F4;&#x63A5;&#x6307;&#x5B9A;&#x67D0;&#x4E00;&#x500B; <code>argument</code> &#x7684;&#x503C;&#x3002;</li>
+</ul>
+</li>
+</ul>
+<p>&#x7531;&#x65BC; <code>Pattern</code> &#x5BE6;&#x969B;&#x5B9A;&#x7FA9;&#x4E86;&#x4E00;&#x500B;&#x6307;&#x4EE4;&#x7684; decode &#x65B9;&#x5F0F;&#xFF0C;&#x56E0;&#x6B64;<strong>&#x6240;&#x6709;&#x7684; bits</strong> &#x53CA; <strong>arguments (&#x5982;&#x679C;&#x6709;&#x53C3;&#x8003; args_ref &#x7684;&#x8A71;)</strong>  &#x90FD;&#x5FC5;&#x9808;&#x660E;&#x78BA;&#x7684;&#x88AB;&#x5B9A;&#x7FA9;&#xFF0C;&#x5982;&#x679C;&#x5728;&#x642D;&#x914D;&#x4E86;&#x6240;&#x6709;&#x7684; <code>pat_elt</code> &#x5F8C;&#x9084;&#x6709;&#x672A;&#x5B9A;&#x7FA9;&#x7684; bits &#x6216;&#x662F; arguments &#x7684;&#x8A71;&#xFF0C;<code>Decodetree</code> &#x4FBF;&#x6703;&#x5831;&#x932F;&#x3002;</p>
+<p>&#x6B64;&#x5916;&#xFF0C;<code>Pattern</code> &#x6240;&#x7522;&#x751F;&#x51FA;&#x4F86;&#x7684; decoder&#xFF0C;&#x6700;&#x5F8C;&#x9084;&#x6703;&#x547C;&#x53EB;&#x5C0D;&#x61C9;&#x7684; <code>translator function</code>&#x3002;</p>
+<ul>
+<li><code>translator function</code> &#x9700;&#x958B;&#x767C;&#x8005;&#x81EA;&#x884C;&#x5B9A;&#x7FA9;&#x3002;</li>
+</ul>
+<h3 id="Examples"><a href="#Examples" class="headerlink" title="Examples"></a>Examples</h3><p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">addl_i   010000 ..... ..... .... 0000000 ..... @opi</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x5B9A;&#x7FA9;&#x4E86; <code>addl_i</code> &#x9019;&#x500B;&#x6307;&#x4EE4;&#x7684; <code>Pattern</code>&#xFF0C;&#x5176;&#x4E2D;&#xFF1A;</p>
+<ul>
+<li>insn[31:26] &#x70BA; <code>010000</code>&#x3002;</li>
+<li>insn[11:5] &#x70BA; <code>0000000</code>&#x3002;</li>
+<li>&#x53C3;&#x8003;&#x4E86; <a href="/QEMU-Decodetree-&#x8A9E;&#x6CD5;&#x4ECB;&#x7D39;-Part-1/#Examples-3">Part 1. Examples</a> &#x5B9A;&#x7FA9;&#x7684; <code>@opi</code> <code>Format</code>&#x3002;</li>
+<li>&#x7531;&#x65BC; <code>Pattern</code> &#x7684;<strong>&#x6240;&#x6709; bits</strong> &#x90FD;&#x5FC5;&#x9808;&#x660E;&#x78BA;&#x7684;&#x88AB;&#x5B9A;&#x7FA9;&#xFF0C;&#x56E0;&#x6B64; <code>@opi</code> &#x5FC5;&#x9808;&#x5305;&#x542B;&#x5176;&#x9918; <code>insn[25:12]</code> &#x53CA; <code>insn[4:0]</code> &#x7684;&#x683C;&#x5F0F;&#x5B9A;&#x7FA9;&#xFF0C;&#x5426;&#x5247; <code>Decodetree</code> &#x4FBF;&#x6703;&#x5831;&#x932F;&#x3002;</li>
+</ul>
+<p>&#x6700;&#x5F8C; <code>addl_i</code> &#x7684; decoder &#x9084;&#x6703;&#x547C;&#x53EB; <code>trans_addl_i()</code> &#x9019;&#x500B; <code>translator function</code>&#x3002;</p>
+<p>&#x642D;&#x914D;&#x4E4B;&#x524D;&#x4ECB;&#x7D39;&#x7684; <a href="/QEMU-Decodetree-&#x8A9E;&#x6CD5;&#x4ECB;&#x7D39;-Part-1/#Fields">Fields</a>&#x3001;<a href="/QEMU-Decodetree-&#x8A9E;&#x6CD5;&#x4ECB;&#x7D39;-Part-1/#Argument-Sets">Argument Sets</a> &#x53CA; <a href="/QEMU-Decodetree-&#x8A9E;&#x6CD5;&#x4ECB;&#x7D39;-Part-1/#Formats">Formats</a>&#xFF0C;&#x8B93;&#x6211;&#x5011;&#x518D;&#x770B;&#x5E7E;&#x500B;&#x5B8C;&#x6574;&#x7684;&#x4F8B;&#x5B50;&#x61C9;&#x8A72;&#x6703;&#x66F4;&#x6E05;&#x695A; <code>Decodetree</code> &#x662F;&#x600E;&#x7522;&#x751F;&#x4E00;&#x500B;&#x6307;&#x4EE4;&#x7684; decoder &#x7684;&#x3002;</p>
+<hr>
+<p>&#x9996;&#x5148;&#x662F; RISC-V &#x7684; <code>lui</code> &#x53CA; <code>auipc</code> &#x6307;&#x4EE4;&#xFF1A;</p>
+<img src="/QEMU-Decodetree-%E8%AA%9E%E6%B3%95%E4%BB%8B%E7%B4%B9-Part-2/lui_auipc.png" class title="LUI &amp; AUIPC instruction formats">
+
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"># Fields:</span><br><span class="line">%rd        7:5</span><br><span class="line"></span><br><span class="line"># immediates:</span><br><span class="line">%imm_u    12:s20                 !function=ex_shift_12</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># Argument sets:</span><br><span class="line">&amp;u    imm rd</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># Formats:</span><br><span class="line">@u       ....................      ..... ....... &amp;u      imm=%imm_u          %rd</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># Patterns</span><br><span class="line">lui      ....................       ..... 0110111 @u</span><br><span class="line">auipc    ....................       ..... 0010111 @u</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x6703;&#x7522;&#x751F;&#x4EE5;&#x4E0B; <code>lui</code> &#x53CA; <code>auipc</code> &#x7684; decoder&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> {</span></span><br><span class="line">    <span class="hljs-keyword">int</span> imm;</span><br><span class="line">    <span class="hljs-keyword">int</span> rd;</span><br><span class="line">} arg_u;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">decode_insn32_extract_u</span><span class="hljs-params">(DisasContext *ctx, arg_u *a, <span class="hljs-keyword">uint32_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    a-&gt;imm = ex_shift_12(ctx, sextract32(insn, <span class="hljs-number">12</span>, <span class="hljs-number">20</span>));</span><br><span class="line">    a-&gt;rd = extract32(insn, <span class="hljs-number">7</span>, <span class="hljs-number">5</span>);</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">decode_insn32</span><span class="hljs-params">(DisasContext *ctx, <span class="hljs-keyword">uint32_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-keyword">union</span> {</span><br><span class="line">        arg_u f_u;</span><br><span class="line">    } u;</span><br><span class="line"></span><br><span class="line">    decode_insn32_extract_u(ctx, &amp;u.f_u, insn);</span><br><span class="line">    <span class="hljs-keyword">switch</span> (insn &amp; <span class="hljs-number">0x0000007f</span>) {</span><br><span class="line">    <span class="hljs-keyword">case</span> <span class="hljs-number">0x00000017</span>:</span><br><span class="line">        <span class="hljs-comment">/* ........ ........ ........ .0010111 */</span></span><br><span class="line">        <span class="hljs-comment">/* ./insn32.decode:18 */</span></span><br><span class="line">        <span class="hljs-keyword">if</span> (trans_auipc(ctx, &amp;u.f_u)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">    <span class="hljs-keyword">case</span> <span class="hljs-number">0x00000037</span>:</span><br><span class="line">        <span class="hljs-comment">/* ........ ........ ........ .0110111 */</span></span><br><span class="line">        <span class="hljs-comment">/* ./insn32.decode:17 */</span></span><br><span class="line">        <span class="hljs-keyword">if</span> (trans_lui(ctx, &amp;u.f_u)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x56DE;&#x9867;&#x5230;&#x76EE;&#x524D;&#x70BA;&#x6B62;&#x6240;&#x4ECB;&#x7D39;&#x7684;&#xFF1A;</p>
+<ul>
+<li><p><code>Argument Sets</code>&#xFF1A;<code>&amp;u</code> &#x9019;&#x500B; <code>argument set</code> &#x5305;&#x542B;&#x4E86; <code>imm</code> &#x53CA; <code>rd</code> &#x9019;&#x5169;&#x500B; <code>arguments</code>&#x3002;</p>
+<p>  </p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> {</span></span><br><span class="line">    <span class="hljs-keyword">int</span> imm;</span><br><span class="line">    <span class="hljs-keyword">int</span> rd;</span><br><span class="line">} arg_u;</span><br></pre></td></tr></tbody></table></figure><p></p>
+</li>
+<li><p><code>Fields</code>&#xFF1A; <code>imm</code> &#x53CA; <code>rd</code>  &#x5206;&#x5225;&#x4F4D;&#x5728; insn[31:12] &#x53CA; insn[11:7]&#xFF0C;&#x4E14; <code>imm</code> &#x70BA; <code>sign-extended</code>&#x3002;&#x6700;&#x5F8C;&#x5728;&#x64F7;&#x53D6;&#x51FA; <code>imm</code> &#x7684;&#x503C;&#x5F8C;&#xFF0C;&#x9084;&#x6703;&#x547C;&#x53EB; <code>ex_shift_12()</code>&#x3002;</p>
+<p>  </p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a-&gt;imm = ex_shift_12(ctx, sextract32(insn, <span class="hljs-number">12</span>, <span class="hljs-number">20</span>));</span><br><span class="line">a-&gt;rd = extract32(insn, <span class="hljs-number">7</span>, <span class="hljs-number">5</span>);</span><br></pre></td></tr></tbody></table></figure><p></p>
+</li>
+<li><p><code>Formats</code>&#xFF1A;<code>@u</code> &#x5B9A;&#x7FA9;&#x4E86; RISC-V <code>U-type</code> &#x6307;&#x4EE4;&#x7684;&#x683C;&#x5F0F;</p>
+<ul>
+<li><p>&#x53C3;&#x8003;&#x4E86; <code>&amp;u</code> &#x9019;&#x500B; <code>Argument Set</code>&#xFF0C;&#x56E0;&#x6B64; decode function &#x6703;&#x50B3;&#x5165; <code>arg_u</code> &#x4F5C;&#x70BA;&#x53C3;&#x6578;&#x3002;</p>
+</li>
+<li><p>insn[31:12] &#x53C3;&#x8003;&#x4E86; <code>imm_u</code> &#x9019;&#x500B; <code>Field</code> (&#x4E26;&#x91CD;&#x65B0;&#x547D;&#x540D;&#x70BA; <code>imm</code>)</p>
+</li>
+<li><p>insn[11:7] &#x53C3;&#x8003;&#x4E86; <code>rd</code> &#x9019;&#x500B; <code>Field</code>&#x3002;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">decode_insn32_extract_u</span><span class="hljs-params">(DisasContext *ctx, arg_u *a, <span class="hljs-keyword">uint32_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    a-&gt;imm = ex_shift_12(ctx, sextract32(insn, <span class="hljs-number">12</span>, <span class="hljs-number">20</span>));</span><br><span class="line">    a-&gt;rd = extract32(insn, <span class="hljs-number">7</span>, <span class="hljs-number">5</span>);</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+</li>
+</ul>
+</li>
+<li><p><code>Patterns</code>&#xFF1A;</p>
+<ul>
+<li><p><code>lui</code> &#x7684; <code>opcode</code> (insn[6:0]) &#x70BA; <code>0010111</code>&#xFF0C;&#x4E5F;&#x5C31;&#x662F; <code>0x17</code>&#xFF0C;&#x5728;&#x7522;&#x751F;&#x51FA;&#x4F86;&#x7684; <code>switch-case</code> &#x4E2D;&#x53EF;&#x4EE5;&#x770B;&#x5230;&#x5176;&#x5C0D;&#x61C9;&#x7684; <code>case</code>&#x3002;</p>
+</li>
+<li><p><code>lui</code> &#x7684; decoder &#x6700;&#x5F8C;&#x547C;&#x53EB;&#x4E86; <code>trans_lui()</code>&#xFF0C;&#x4E26;&#x50B3;&#x5165; <code>DisasContext</code> &#x53CA;&#x7D93;&#x7531; <code>decode_insn32_extract_u()</code> &#x6240;&#x89E3;&#x6790;&#x51FA;&#x4F86;&#x7684; <code>arg_u</code>&#x3002;</p>
+</li>
+<li><p><code>auipc</code> &#x7684; <code>opcode</code> (insn[6:0]) &#x70BA; <code>0110111</code>&#xFF0C;&#x4E5F;&#x5C31;&#x662F; <code>0x37</code>&#xFF0C;&#x5728;&#x7522;&#x751F;&#x51FA;&#x4F86;&#x7684; <code>switch-case</code> &#x4E2D;&#x53EF;&#x4EE5;&#x770B;&#x5230;&#x5176;&#x5C0D;&#x61C9;&#x7684; <code>case</code>&#x3002;</p>
+</li>
+<li><p><code>auipc</code> &#x7684; decoder &#x6700;&#x5F8C;&#x547C;&#x53EB;&#x4E86; <code>trans_auipc()</code>&#xFF0C;&#x4E26;&#x50B3;&#x5165; <code>DisasContext</code> &#x53CA;&#x7D93;&#x7531; <code>decode_insn32_extract_u()</code> &#x6240;&#x89E3;&#x6790;&#x51FA;&#x4F86;&#x7684; <code>arg_u</code>&#x3002;</p>
+</li>
+<li><p>P.S. &#x9019;&#x908A;&#x7531;&#x65BC; <code>Decodetree</code> &#x767C;&#x73FE; <code>lui</code> &#x53CA; <code>auipc</code> &#x53EF;&#x4EE5;&#x5171;&#x7528; <code>decode_insn32_extract_u()</code>&#xFF0C;&#x56E0;&#x6B64;&#x5C07;&#x5176;&#x63D0;&#x5230;&#x4E86; <code>switch-case</code> &#x4E4B;&#x5916;&#x3002;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">decode_insn32</span><span class="hljs-params">(DisasContext *ctx, <span class="hljs-keyword">uint32_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-keyword">union</span> {</span><br><span class="line">        arg_u f_u;</span><br><span class="line">    } u;</span><br><span class="line"></span><br><span class="line">    decode_insn32_extract_u(ctx, &amp;u.f_u, insn);</span><br><span class="line">    <span class="hljs-keyword">switch</span> (insn &amp; <span class="hljs-number">0x0000007f</span>) {</span><br><span class="line">    <span class="hljs-keyword">case</span> <span class="hljs-number">0x00000017</span>:</span><br><span class="line">        <span class="hljs-comment">/* ........ ........ ........ .0010111 */</span></span><br><span class="line">        <span class="hljs-comment">/* ./insn32.decode:18 */</span></span><br><span class="line">        <span class="hljs-keyword">if</span> (trans_auipc(ctx, &amp;u.f_u)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">    <span class="hljs-keyword">case</span> <span class="hljs-number">0x00000037</span>:</span><br><span class="line">        <span class="hljs-comment">/* ........ ........ ........ .0110111 */</span></span><br><span class="line">        <span class="hljs-comment">/* ./insn32.decode:17 */</span></span><br><span class="line">        <span class="hljs-keyword">if</span> (trans_lui(ctx, &amp;u.f_u)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x6211;&#x5011;&#x53E6;&#x5916;&#x53EF;&#x4EE5;&#x767C;&#x73FE;&#xFF0C;<code>Pattern</code> + <code>Format</code> &#x628A;&#x6240;&#x6709;&#x7684; 32-bits &#x90FD;&#x7D66;&#x4E86;&#x660E;&#x78BA;&#x7684;&#x5B9A;&#x7FA9;&#xFF1A;</p>
+</li>
+<li><p><code>Pattern</code> &#x5B9A;&#x7FA9;&#x4E86; <code>opcode</code> (insn[6:0])&#x3002;</p>
+</li>
+<li><p><code>Format</code> &#x53C3;&#x8003;&#x4E86; <code>imm</code> (insn[31:12]) &#x53CA; <code>rd</code> (insn[11:7])&#x3002;</p>
+<p>&#x5982;&#x679C;&#x6709;&#x4EFB;&#x4F55;&#x672A;&#x660E;&#x78BA;&#x5B9A;&#x7FA9;&#x7684; bits &#x7684;&#x8A71;&#xFF0C;<code>Decodetree</code> &#x4FBF;&#x6703;&#x5831;&#x932F;&#xFF0C;&#x4F8B;&#x5982;&#x5982;&#x679C;&#x6211;&#x5011;&#x5C07; <code>lui</code> &#x7684; <code>opcode</code> &#x6700;&#x9AD8; 2 &#x500B; bits (insn[6:5]) &#x7531; <code>01</code> &#x6539;&#x6210; <code>..</code>&#xFF1A;</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lui      ....................       ..... ..10111 @u</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p><code>Decodetree</code> &#x5728;&#x89E3;&#x6790;&#x6642;&#xFF0C;&#x4FBF;&#x6703;&#x5831;&#x932F;&#xFF1A;</p>
+<blockquote>
+<p>./insn32.decode:17: error: (&#x2018;bits left unspecified (0x00000060)&#x2019;,)</p>
+</blockquote>
+<p><code>Decodetree</code> &#x63D0;&#x9192;&#x6211;&#x5011;&#xFF0C;insn[6:5] (<code>0x00000060</code>) &#x5C1A;&#x672A;&#x7D66;&#x51FA;&#x660E;&#x78BA;&#x5B9A;&#x7FA9;&#xFF0C;&#x4E26;&#x6703;&#x986F;&#x793A;&#x51FA;&#x5176;&#x932F;&#x8AA4;&#x7684;&#x884C;&#x6578;&#x3002;</p>
+<p><code>trans_lui()</code> &#x548C; <code>trans_auipc()</code> &#x88AB;&#x5B9A;&#x7FA9;&#x5728; <code>target/riscv/insn_trans/trans_rvi.inc.c</code>&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">trans_lui</span><span class="hljs-params">(DisasContext *ctx, arg_lui *a)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-keyword">if</span> (a-&gt;rd != <span class="hljs-number">0</span>) {</span><br><span class="line">        tcg_gen_movi_tl(cpu_gpr[a-&gt;rd], a-&gt;imm);</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">trans_auipc</span><span class="hljs-params">(DisasContext *ctx, arg_auipc *a)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-keyword">if</span> (a-&gt;rd != <span class="hljs-number">0</span>) {</span><br><span class="line">        tcg_gen_movi_tl(cpu_gpr[a-&gt;rd], a-&gt;imm + ctx-&gt;base.pc_next);</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x53EF;&#x4EE5;&#x770B;&#x5230; <code>trans_*()</code> &#x8CA0;&#x8CAC;&#x5BE6;&#x969B;&#x6307;&#x4EE4;&#x7684; business logics &#x53CA;&#x7522;&#x751F;&#x5C0D;&#x61C9;&#x7684; <code>TCG codes</code>&#x3002;</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>&#x5982;&#x540C;&#x5148;&#x524D;&#x6240;&#x4ECB;&#x7D39;&#xFF0C;<code>Patterns</code> &#x7684; <code>pat_elt</code> &#x4E5F;&#x53EF;&#x4EE5;&#x63A1;&#x7528; <code>field_elt</code> &#x8A9E;&#x6CD5;&#xFF0C;&#x5982; RISC-V &#x7684; <code>fence</code> &#x6307;&#x4EE4;&#xFF1A;</p>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fence    ---- pred:4 succ:4 ----- 000 ----- 0001111</span><br></pre></td></tr></tbody></table></figure><p></p>
+<ul>
+<li>insn[27:24] &#x70BA; <code>pred</code>&#x3002;</li>
+<li>insn[23:20] &#x70BA; <code>succ</code>&#x3002;</li>
+<li>insn[14:12] &#x56FA;&#x5B9A;&#x70BA; <code>000</code>&#x3002;</li>
+<li>insn[6:0] &#x70BA; <code>opcode</code> (<code>0001111</code>)&#x3002;</li>
+<li>&#x6C92;&#x6709;&#x53C3;&#x8003;&#x4EFB;&#x4F55;&#x7684; <code>Format</code>&#x3002;</li>
+<li>&#x5269;&#x4E0B;&#x7684; insn[31:28]&#x3001;insn[19:15]&#x3001;insn[11:7] &#x88AB;&#x5BA3;&#x544A;&#x70BA; <code>-</code>&#xFF0C;&#x56E0;&#x6B64;&#x5C31;&#x7B97;&#x6C92;&#x6709;&#x88AB;&#x660E;&#x78BA;&#x5B9A;&#x7FA9;&#x4E5F;&#x6C92;&#x6709;&#x95DC;&#x4FC2;&#x3002;</li>
+</ul>
+<p>&#x6240;&#x751F;&#x6210; <code>fence</code> &#x7684; decoder &#x5982;&#x4E0B;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> {</span></span><br><span class="line">    <span class="hljs-keyword">int</span> pred;</span><br><span class="line">    <span class="hljs-keyword">int</span> succ;</span><br><span class="line">} arg_decode_insn320;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">decode_insn32_extract_decode_insn32_Fmt_0</span><span class="hljs-params">(DisasContext *ctx, arg_decode_insn320 *a, <span class="hljs-keyword">uint32_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    a-&gt;pred = extract32(insn, <span class="hljs-number">24</span>, <span class="hljs-number">4</span>);</span><br><span class="line">    a-&gt;succ = extract32(insn, <span class="hljs-number">20</span>, <span class="hljs-number">4</span>);</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">decode_insn32</span><span class="hljs-params">(DisasContext *ctx, <span class="hljs-keyword">uint32_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-keyword">union</span> {</span><br><span class="line">        arg_decode_insn320 f_decode_insn320;</span><br><span class="line">    } u;</span><br><span class="line"></span><br><span class="line">    decode_insn32_extract_decode_insn32_Fmt_0(ctx, &amp;u.f_decode_insn320, insn);</span><br><span class="line">    <span class="hljs-keyword">switch</span> (insn &amp; <span class="hljs-number">0x0000707f</span>) {</span><br><span class="line">    <span class="hljs-keyword">case</span> <span class="hljs-number">0x0000000f</span>:</span><br><span class="line">        <span class="hljs-comment">/* ........ ........ .000.... .0001111 */</span></span><br><span class="line">        <span class="hljs-comment">/* ./insn32.decode:2 */</span></span><br><span class="line">        <span class="hljs-keyword">if</span> (trans_fence(ctx, &amp;u.f_decode_insn320)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x503C;&#x5F97;&#x6CE8;&#x610F;&#x7684;&#x662F;&#xFF0C;&#x96D6;&#x7136;&#x9019;&#x6B21;&#x6211;&#x5011;&#x6C92;&#x6709;&#x53C3;&#x8003;&#x4EFB;&#x4F55;&#x7684; <code>Argument Set</code>&#xFF0C;&#x4F46; <code>Decodetree</code> &#x9084;&#x662F;&#x66FF;&#x6211;&#x5011;&#x751F;&#x6210;&#x4E86;&#x4E00;&#x500B;&#x5305;&#x542B; <code>pred</code> &#x548C; <code>succ</code> &#x7684; <code>arg_decode_insn320</code> &#x3002;</p>
+<p><code>trans_fence()</code> &#x540C;&#x6A23;&#x662F;&#x88AB;&#x5B9A;&#x7FA9;&#x5728; <code>./target/riscv/insn_trans/trans_rvi.inc.c</code>&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">trans_fence</span><span class="hljs-params">(DisasContext *ctx, arg_fence *a)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-comment">/* FENCE is a full memory barrier. */</span></span><br><span class="line">    tcg_gen_mb(TCG_MO_ALL | TCG_BAR_SC);</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<hr>
+<h1 id="Pattern-Groups"><a href="#Pattern-Groups" class="headerlink" title="Pattern Groups"></a>Pattern Groups</h1><p><code>Pattern Groups</code> &#x7531;&#x4E00;&#x500B;&#x4EE5;&#x4E0A;&#x7684; <code>Patterns</code> &#x6240;&#x7D44;&#x6210;&#xFF0C;&#x5176;&#x4E3B;&#x8981;&#x5DEE;&#x5225;&#x662F;&#x4E0D;&#x540C; <code>Patterns</code> &#x4E4B;&#x9593;&#x7684; bits &#x53EF;&#x4EE5; overlap&#x3002;&#x7576;&#x540C;&#x7D44;&#x4E2D;&#x6709;&#x591A;&#x500B; <code>Patterns</code> &#x6642;&#xFF0C;&#x6703;&#x4F9D;&#x64DA;&#x8A72;&#x7D44;&#x4E2D;&#x5404; <code>Pattern</code> &#x7684;&#x5BA3;&#x544A;&#x9806;&#x5E8F;&#x4F9D;&#x5E8F;&#x5224;&#x65B7;&#x76EE;&#x524D;&#x7684;&#x6307;&#x4EE4;&#x662F;&#x5426;&#x7B26;&#x5408;&#x5176;&#x5B9A;&#x7FA9;&#x3002;&#x9664;&#x6B64;&#x4E4B;&#x5916;&#xFF0C;&#x7576;&#x7B26;&#x5408;&#x7684; <code>Pattern</code> &#x5176; <code>trans_*()</code> &#x56DE;&#x50B3;&#x503C;&#x70BA; <code>false</code> &#x6642;&#xFF0C;&#x4E5F;&#x6703;&#x88AB;&#x8996;&#x70BA;<strong>&#x4E0D;&#x76F8;&#x7B26;</strong>&#xFF0C;&#x800C;&#x7E7C;&#x7E8C;&#x5224;&#x65B7;&#x8A72;&#x7D44;&#x4E2D;&#x7684;&#x4E0B;&#x4E00;&#x500B; <code>Pattern</code>&#x3002;&#x56E0;&#x6B64; <code>Pattern Groups</code> &#x975E;&#x5E38;&#x9069;&#x5408;&#x5C07;&#x591A;&#x500B;&#x76F8;&#x4F3C;&#x683C;&#x5F0F;&#x7684;&#x6307;&#x4EE4;&#x7D66;&#x7D44;&#x6210;&#x540C;&#x4E00;&#x500B; <code>Pattern Group</code>&#x3002;</p>
+<p>&#x539F;&#x6587;&#x8AAA;&#x660E;&#x5982;&#x4E0B;&#xFF1A;</p>
+<blockquote>
+<p>Unlike ungrouped patterns, grouped patterns are allowed to overlap. Conflicts are resolved by selecting the patterns in order.  If all of the <code>fixedbits</code> for a pattern match, its translate function will be called.  If the translate function returns <code>false</code>, then subsequent patterns within the group will be matched.</p>
+</blockquote>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">group    := &apos;{&apos; ( pat_def | group )+ &apos;}&apos;</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x5404; <code>Pattern Group</code> &#x4EE5; <code>{</code> &#x958B;&#x982D;&#xFF0C;&#x4E26;&#x4EE5; <code>}</code> &#x7D50;&#x5C3E;&#xFF0C;&#x4E14;&#x5141;&#x8A31; <code>nested pattern groups</code> &#x7684;&#x5B58;&#x5728;&#xFF0C;&#x5176;&#x4ED6;&#x8A9E;&#x6CD5;&#x7686;&#x8207; <code>Pattern</code> &#x76F8;&#x540C;&#x3002;</p>
+<h3 id="Examples-1"><a href="#Examples-1" class="headerlink" title="Examples"></a>Examples</h3><p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">  {</span><br><span class="line">    nop   000010 ----- ----- 0000 001001 0 00000</span><br><span class="line">    copy  000010 00000 r1:5  0000 001001 0 rt:5</span><br><span class="line">  }</span><br><span class="line">  or      000010 rt2:5 r1:5  cf:4 001001 0 rt:5</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x6703;&#x7522;&#x751F;&#x4EE5;&#x4E0B;&#x7684; decoder&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">switch</span> (insn &amp; <span class="hljs-number">0xfc000fe0</span>) {</span><br><span class="line"><span class="hljs-keyword">case</span> <span class="hljs-number">0x08000240</span>:</span><br><span class="line">    <span class="hljs-comment">/* 000010.. ........ ....0010 010..... */</span></span><br><span class="line">    <span class="hljs-keyword">if</span> ((insn &amp; <span class="hljs-number">0x0000f000</span>) == <span class="hljs-number">0x00000000</span>) {</span><br><span class="line">        <span class="hljs-comment">/* 000010.. ........ 00000010 010..... */</span></span><br><span class="line">        <span class="hljs-keyword">if</span> ((insn &amp; <span class="hljs-number">0x0000001f</span>) == <span class="hljs-number">0x00000000</span>) {</span><br><span class="line">            <span class="hljs-comment">/* 000010.. ........ 00000010 01000000 */</span></span><br><span class="line">            extract_decode_Fmt_0(&amp;u.f_decode0, insn);</span><br><span class="line">            <span class="hljs-keyword">if</span> (trans_nop(ctx, &amp;u.f_decode0)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">						<span class="hljs-comment">// &#x9019;&#x908A;&#x6C92;&#x6709;&#x76F4;&#x63A5;&#x56DE;&#x50B3; false&#xFF0C;&#x8B93; switch-case &#x7E7C;&#x7E8C;&#x5F80;&#x4E0B;&#x57F7;&#x884C;</span></span><br><span class="line">      }</span><br><span class="line">      <span class="hljs-keyword">if</span> ((insn &amp; <span class="hljs-number">0x03e00000</span>) == <span class="hljs-number">0x00000000</span>) {</span><br><span class="line">          <span class="hljs-comment">/* 00001000 000..... 00000010 010..... */</span></span><br><span class="line">          extract_decode_Fmt_1(&amp;u.f_decode1, insn);</span><br><span class="line">          <span class="hljs-keyword">if</span> (trans_copy(ctx, &amp;u.f_decode1)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">				&#x3000;<span class="hljs-comment">// &#x9019;&#x908A;&#x6C92;&#x6709;&#x76F4;&#x63A5;&#x56DE;&#x50B3; false&#xFF0C;&#x8B93; switch-case &#x7E7C;&#x7E8C;&#x5F80;&#x4E0B;&#x57F7;&#x884C;</span></span><br><span class="line">      }</span><br><span class="line">  }</span><br><span class="line">  extract_decode_Fmt_2(&amp;u.f_decode2, insn);</span><br><span class="line">  <span class="hljs-keyword">if</span> (trans_or(ctx, &amp;u.f_decode2)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">  <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x7576;&#x6307;&#x4EE4;&#x7684;&#x503C;&#x7B26;&#x5408; <code>nop</code> &#x53CA; <code>copy</code> &#x9019;&#x500B;&#x5167;&#x5C64; <code>Pattern Group</code> &#x6642;&#xFF0C;&#x6703;&#x5148;&#x5224;&#x65B7;&#x8A72;&#x6307;&#x4EE4;&#x662F;&#x5426;&#x7B26;&#x5408; <code>nop</code> &#x6307;&#x4EE4;&#x7684;&#x5B9A;&#x7FA9;&#xFF0C;&#x4E14; <code>trans_nop()</code> &#x7684;&#x56DE;&#x50B3;&#x503C;&#x70BA; <code>true</code>&#x3002;&#x5426;&#x5247;&#x7684;&#x8A71;&#xFF0C;&#x5C31;&#x6703;&#x7E7C;&#x7E8C;&#x5224;&#x65B7;&#x662F;&#x5426;&#x7B26;&#x5408;&#x540C;&#x7D44;&#x4E2D;&#x7684; <code>copy</code> &#x6307;&#x4EE4;&#x3002;&#x82E5;&#x90FD;&#x4E0D;&#x7B26;&#xFF0C;&#x5C31;&#x6703;&#x518D;&#x5224;&#x65B7;&#x662F;&#x5426;&#x7B26;&#x5408;&#x5916;&#x5C64; <code>Pattern Group</code> &#x7684; <code>or</code> &#x6307;&#x4EE4;&#x3002;&#x82E5;&#x4ECD;&#x4E0D;&#x7B26;&#xFF0C;&#x624D;&#x6703;&#x56DE;&#x50B3; <code>false</code> &#x8868;&#x793A; decode &#x5931;&#x6557;&#x3002;</p>
+<p>&#x8207;&#x55AE;&#x7D14;&#x4F7F;&#x7528; <code>Pattern</code> &#x6700;&#x5927;&#x4E0D;&#x540C;&#x7684;&#x662F;&#xFF0C;&#x7576;&#x4E00; <code>Pattern</code> &#x7684; <code>trans_*()</code> &#x56DE;&#x50B3;&#x503C;&#x70BA; <code>false</code> &#x6642;&#xFF0C;&#x4E0D;&#x6703;&#x76F4;&#x63A5;&#x56DE;&#x50B3; <code>false</code> (&#x4EE3;&#x8868; decode &#x5931;&#x6557;)&#xFF0C;&#x800C;&#x662F;&#x6703;&#x63A5;&#x7E8C;&#x8457;&#x5224;&#x65B7;&#x5F8C;&#x7E8C;&#x7684; <code>Patterns</code> &#x662F;&#x5426;&#x76F8;&#x7B26;&#x3002;</p>
+<hr>
+<p>RISC-V Compressed-Extension &#x4E2D;&#x7684; <code>c.ebreak</code>&#x3001;<code>c.jalr</code>&#x3001;&#x53CA; <code>c.add</code> &#x6307;&#x4EE4;&#xFF0C;&#x7531;&#x65BC;&#x9019;&#x4E09;&#x500B;&#x6307;&#x4EE4;&#x7684;&#x683C;&#x5F0F;&#x975E;&#x5E38;&#x76F8;&#x4F3C;&#xFF0C;&#x56E0;&#x6B64;&#x975E;&#x5E38;&#x9069;&#x5408;&#x4F7F;&#x7528; <code>Pattern Group</code> &#x4F86;&#x5B9A;&#x7FA9;&#xFF1A;</p>
+<img src="/QEMU-Decodetree-%E8%AA%9E%E6%B3%95%E4%BB%8B%E7%B4%B9-Part-2/risc_v_c_insn.png" class title="RISC-V Compressed-Extension instruction formats">
+
+<p>RISC-V spec. &#x4E2D;&#x5B9A;&#x7FA9;&#xFF1A;</p>
+<p><code>C.EBREAK</code> shares the <code>opcode</code> with the <code>C.ADD</code> instruction, but with <code>rd</code> and <code>rs2</code> both <code>zero</code>, thus can also use the <code>CR</code> format.</p>
+<p><code>C.JALR</code> is only valid when <code>rs1&#x2260;x0</code>; the code point with <code>rs1=x0</code> corresponds to the <code>C.EBREAK</code> instruction.</p>
+<p><code>C.ADD</code> is only valid when <code>rs2&#x2260;x0</code>; the code points with <code>rs2=x0</code> correspond to the <code>C.JALR</code> and <code>C.EBREAK</code> instructions. The code points with <code>rs2&#x338;=x0</code> and <code>rd=x0</code> are <code>HINTs</code>.</p>
+<p><code>c.ebreak</code>&#x3001;<code>c.jalr</code>&#x3001;<code>c.add</code> &#x4E09;&#x500B;&#x6307;&#x4EE4;&#xFF1A;</p>
+<ul>
+<li>insn[15:13]&#x3001;insn[12]&#x3001;insn[1:0] &#x7684;&#x503C;&#x7686;&#x76F8;&#x540C;&#x3002;</li>
+<li>&#x7576; insn[11:7] &#x4E14; insn[6:2] &#x7684;&#x503C;&#x7686;&#x70BA; <code>0</code> (<code>rs1=0</code> &#x4E14; <code>rs2=0</code>) &#x6642;&#x70BA; <code>c.ebreak</code> &#x6307;&#x4EE4;&#x3002;</li>
+<li>&#x7576;&#x53EA;&#x6709; insn[11:7] &#x7684;&#x503C;&#x70BA; <code>0</code> (<code>rs1=0</code> &#x4E14; <code>rs2&#x2260;0</code>) &#x6642;&#x70BA; <code>c.jalr</code> &#x6307;&#x4EE4;&#x3002;</li>
+<li>&#x5426;&#x5247;&#x70BA; <code>c.add</code> &#x6307;&#x4EE4; (<code>rs1&#x2260;x0</code> &#x4E14; <code>rs2&#x2260;0</code>)&#x3002;</li>
+</ul>
+<p></p><figure class="highlight plain hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"># Fields</span><br><span class="line">%rd        7:5</span><br><span class="line">%rs2_5     2:5</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># Argument Sets</span><br><span class="line">&amp;r         rd rs1 rs2   !extern</span><br><span class="line">&amp;i         imm rs1 rd   !extern</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># Formats</span><br><span class="line">@cr        ....  ..... .....  .. &amp;r      rs2=%rs2_5       rs1=%rd     %rd</span><br><span class="line">@c_jalr    ... . .....  ..... .. &amp;i      imm=0 rs1=%rd</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># Pattern Groups</span><br><span class="line">{</span><br><span class="line">  ebreak          100 1  00000  00000 10</span><br><span class="line">  jalr            100 1  .....  00000 10 @c_jalr rd=1  # C.JALR</span><br><span class="line">  add             100 1  .....  ..... 10 @cr</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x6240;&#x751F;&#x6210;&#x7684; decoder &#x5982;&#x4E0B;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">decode_insn16_extract_c_jalr</span><span class="hljs-params">(DisasContext *ctx, arg_i *a, <span class="hljs-keyword">uint16_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    a-&gt;imm = <span class="hljs-number">0</span>; <span class="hljs-comment">// &#x5728; c_jalr &#x7684; Format &#x4E2D;&#x6307;&#x5B9A; imm &#x7684;&#x503C;&#x70BA; 0</span></span><br><span class="line">    a-&gt;rs1 = extract32(insn, <span class="hljs-number">7</span>, <span class="hljs-number">5</span>);</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">decode_insn16_extract_cr</span><span class="hljs-params">(DisasContext *ctx, arg_r *a, <span class="hljs-keyword">uint16_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    a-&gt;rs2 = extract32(insn, <span class="hljs-number">2</span>, <span class="hljs-number">5</span>);</span><br><span class="line">    a-&gt;rs1 = extract32(insn, <span class="hljs-number">7</span>, <span class="hljs-number">5</span>);</span><br><span class="line">    a-&gt;rd = extract32(insn, <span class="hljs-number">7</span>, <span class="hljs-number">5</span>);</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">decode_insn16_extract_decode_insn16_Fmt_2</span><span class="hljs-params">(DisasContext *ctx, arg_decode_insn162 *a, <span class="hljs-keyword">uint16_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">decode_insn16</span><span class="hljs-params">(DisasContext *ctx, <span class="hljs-keyword">uint16_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-keyword">union</span> {</span><br><span class="line">        arg_decode_insn162 f_decode_insn162;</span><br><span class="line">        arg_i f_i;</span><br><span class="line">        arg_r f_r;</span><br><span class="line">    } u;</span><br><span class="line"></span><br><span class="line">    <span class="hljs-keyword">switch</span> (insn &amp; <span class="hljs-number">0x0000f003</span>) {</span><br><span class="line">    <span class="hljs-keyword">case</span> <span class="hljs-number">0x00009002</span>:</span><br><span class="line">        <span class="hljs-comment">/* 1001.... ......10 */</span></span><br><span class="line">        <span class="hljs-keyword">if</span> ((insn &amp; <span class="hljs-number">0x00000ffc</span>) == <span class="hljs-number">0x00000000</span>) {</span><br><span class="line">            <span class="hljs-comment">/* 10010000 00000010 */</span></span><br><span class="line">            <span class="hljs-comment">/* ./insn16.decode:20 */</span></span><br><span class="line">            decode_insn16_extract_decode_insn16_Fmt_2(ctx, &amp;u.f_decode_insn162, insn);</span><br><span class="line">            <span class="hljs-keyword">if</span> (trans_ebreak(ctx, &amp;u.f_decode_insn162)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">            <span class="hljs-comment">// &#x9019;&#x908A;&#x6C92;&#x6709;&#x76F4;&#x63A5;&#x56DE;&#x50B3; false&#xFF0C;&#x8B93; switch-case &#x7E7C;&#x7E8C;&#x5F80;&#x4E0B;&#x57F7;&#x884C;</span></span><br><span class="line">        }</span><br><span class="line">        <span class="hljs-keyword">if</span> ((insn &amp; <span class="hljs-number">0x0000007c</span>) == <span class="hljs-number">0x00000000</span>) {</span><br><span class="line">            <span class="hljs-comment">/* 1001.... .0000010 */</span></span><br><span class="line">            <span class="hljs-comment">/* ./insn16.decode:21 */</span></span><br><span class="line">            decode_insn16_extract_c_jalr(ctx, &amp;u.f_i, insn);</span><br><span class="line">            u.f_i.rd = <span class="hljs-number">1</span>; <span class="hljs-comment">// &#x5728; jalr &#x7684; Pattern &#x4E2D;&#x6307;&#x5B9A; rd &#x7684;&#x503C;&#x70BA; 0&#x3002;</span></span><br><span class="line">            <span class="hljs-keyword">if</span> (trans_jalr(ctx, &amp;u.f_i)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">            <span class="hljs-comment">// &#x9019;&#x908A;&#x6C92;&#x6709;&#x76F4;&#x63A5;&#x56DE;&#x50B3; false&#xFF0C;&#x8B93; switch-case &#x7E7C;&#x7E8C;&#x5F80;&#x4E0B;&#x57F7;&#x884C;</span></span><br><span class="line">        }</span><br><span class="line">        <span class="hljs-comment">/* ./insn16.decode:22 */</span></span><br><span class="line">        decode_insn16_extract_cr(ctx, &amp;u.f_r, insn);</span><br><span class="line">        <span class="hljs-keyword">if</span> (trans_add(ctx, &amp;u.f_r)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x7576;&#x6307;&#x4EE4;&#x683C;&#x5F0F;&#x7B26;&#x5408; <code>c.ebreak</code>&#x3001;<code>c.jalr</code>&#x3001;<code>c.add</code> &#x7684; <code>Pattern Group</code> &#x6642;&#xFF0C;&#x6703;&#x4F9D;&#x5E8F;&#x5224;&#x65B7;&#x8A72;&#x6307;&#x4EE4;&#x662F;&#x5426;&#x7B26;&#x5408; <code>c.ebreak</code>&#x3001;<code>c.jalr</code>&#x3001;<code>c.add</code> &#x7684;&#x5B9A;&#x7FA9;&#x4EE5;&#x53CA;&#x5176;&#x5C0D;&#x61C9;&#x7684; <code>trans_*()</code>&#x3002;</p>
+<p>&#x53E6;&#x5916;&#x503C;&#x5F97;&#x4E00;&#x63D0;&#x7684;&#x662F;&#xFF0C;&#x5728; <code>c_jalr</code> <code>Format</code> &#x548C; <code>jalr</code> <code>Pattern</code> &#x4E2D;&#x6709;&#x5206;&#x5225;&#x6307;&#x5B9A;&#x5176; <code>imm</code> &#x53CA; <code>rd</code> &#x7684;&#x503C;&#x70BA; <code>0</code>&#xFF0C;&#x6240;&#x751F;&#x6210;&#x7684; codes &#x4E5F;&#x6703;&#x5206;&#x5225;&#x5728;&#x5C0D;&#x61C9;&#x7684;&#x5730;&#x65B9;&#x5C07;&#x8A72;&#x503C;&#x8A2D;&#x70BA; <code>0</code> (&#x898B; codes &#x8A3B;&#x89E3;&#x8AAA;&#x660E;)&#x3002;</p>
+<hr>
+<p>&#x4EE5;&#x4E0A;&#x5C31;&#x662F; <code>Decodetree</code> &#x7684;&#x8A9E;&#x6CD5;&#x8AAA;&#x660E;&#x3002;&#x900F;&#x904E; <code>Decodetree</code>&#xFF0C;&#x6211;&#x5011;&#x4E0D;&#x7528;&#x518D;&#x50CF;&#x4EE5;&#x524D;&#x4EE5;&#x6A23;&#x5BEB;&#x4E00;&#x5927;&#x5305;&#x7684; <code>switch-case</code> &#x4F86; decode &#x6307;&#x4EE4;&#x3002;&#x5C07;&#x4E0D;&#x540C;&#x985E;&#x578B;&#x7684;&#x6307;&#x4EE4;&#x5BEB;&#x81F3;&#x4E0D;&#x540C;&#x7684; decode &#x6A94;&#xFF0C;&#x4E0D;&#x50C5;&#x65B9;&#x4FBF;&#x7DAD;&#x8B77;&#xFF0C;&#x95B1;&#x8B80;&#x8D77;&#x4F86;&#x4E5F;&#x66F4;&#x70BA;&#x5BB9;&#x6613;&#x3002;</p>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/QEMU/">#QEMU</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/RISC-V/">#RISC-V</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/QEMU-%E4%BD%BF%E7%94%A8-Decodetree-%E6%96%B0%E5%A2%9E-RISC-V-%E6%8C%87%E4%BB%A4/">QEMU: 使用 Decodetree 新增 RISC-V 指令</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/QEMU-Decodetree-%E8%AA%9E%E6%B3%95%E4%BB%8B%E7%B4%B9-Part-1/">QEMU Decodetree 語法介紹 (Part 1.)</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2020 Frank Chang&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/" target="_blank" rel="noopener">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+</body>
+</html>

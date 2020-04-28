@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Linux Kernel: ARRAY_SIZE() - 0xc0de</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+
+
+<meta name="description" content="C, QEMU, Linux Kernel and RISC-V">
+
+
+
+<meta name="keywords" content="c,qemu,linux,kernel,risc-v">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+
+<meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="0xc0de" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                <img src="/images/logo.png" alt="" height="28">
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Linux Kernel: ARRAY_SIZE()
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2012-10-15T03:37:40.000Z" itemprop="datePublished">10月 15 2012</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Linux-Kernel/">Linux Kernel</a><span>></span><a class="article-category-link" href="/categories/Linux-Kernel/Tricks/">Tricks</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            11 分钟 讀完 (約 1649 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>&#x901A;&#x5E38;&#x6211;&#x5011;&#x5728; C &#x8A9E;&#x8A00;&#x4E2D;&#x53D6;&#x5F97;&#x9663;&#x5217;&#x7684;&#x5143;&#x6578;&#x500B;&#x6578;&#x53EF;&#x4EE5;&#x900F;&#x904E;&#x4E0B;&#x5217;&#x7684;&#x65B9;&#x5F0F;&#x4F86;&#x8A08;&#x7B97;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> ARRAY_SIZE(arr)&#xA0;(sizeof(arr) / sizeof((arr)[0]))</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">int</span> arr[<span class="hljs-number">10</span>];</span><br><span class="line"><span class="hljs-keyword">int</span> arr_size = ARRAY_SIZE(arr);</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x4F46;&#x5982;&#x540C; Jserv &#x5927;&#x5927;&#x5728; <a href="http://blog.linux.org.tw/~jserv/archives/001888.html" target="_blank" rel="noopener">&#x9019;&#x7BC7;&#x6587;&#x7AE0;</a> &#x4E2D;&#x6240;&#x63D0;&#x5230;&#xFF1A;<strong>ARRAY_SIZE()</strong> &#x9019;&#x6A23;&#x7684; macro &#x5176;&#x5BE6;&#x662F;&#x9677;&#x9631;&#x91CD;&#x91CD;&#x2026;</p>
+<a id="more"></a>
+
+<p>&#x56E0;&#x70BA; macro &#x672C;&#x8EAB;&#x6C92;&#x8FA6;&#x6CD5;&#x505A;&#x578B;&#x614B;&#x6AA2;&#x67E5;&#xFF0C;&#x53EA;&#x662F;&#x55AE;&#x7D14;&#x7684;&#x5C07;&#x503C;&#x5E36;&#x5165;&#x4E26;&#x5C55;&#x958B;&#xFF0C;&#x800C;&#x5728; C &#x4E2D;&#x6211;&#x5011;&#x5E38;&#x5E38;&#x6703;&#x5C07;&#x6307;&#x6A19;&#x548C;&#x9663;&#x5217;&#x6DF7;&#x8457;&#x4F7F;&#x7528;&#x3002;&#x56E0;&#x6B64;&#x82E5;&#x662F;&#x6211;&#x5011;&#x5C07;&#x6307;&#x5411;&#x8A72;&#x9663;&#x5217;&#x7684;&#x6307;&#x6A19;&#x50B3;&#x5165;&#xFF0C;&#x5C31;&#x6703;&#x5F97;&#x5230;&#x932F;&#x8AA4;&#x7684;&#x8A08;&#x7B97;&#x7D50;&#x679C;&#x3002;</p>
+<p>&#x5982;&#x4E0B;&#x9762;&#x7684;&#x7A0B;&#x5F0F;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> &amp;lt;stdio.h&amp;gt;</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> ARRAY_SIZE(arr)     (sizeof(arr) / sizeof(arr[0]))</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">        <span class="hljs-keyword">int</span> a[<span class="hljs-number">10</span>];</span><br><span class="line">        <span class="hljs-keyword">int</span> *a_ptr = a;</span><br><span class="line"></span><br><span class="line">        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d\n&quot;</span>, ARRAY_SIZE(a));</span><br><span class="line">        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d\n&quot;</span>, ARRAY_SIZE(a_ptr));</span><br><span class="line"></span><br><span class="line">        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x82E5;&#x50B3;&#x5165;&#x9663;&#x5217; <em>a</em>&#xFF0C;&#x5247;&#x7D50;&#x679C;&#x6703;&#x6B63;&#x78BA;&#x986F;&#x793A; size &#x5927;&#x5C0F;&#x70BA; <strong>10</strong>&#xFF0C;&#x4F46;&#x82E5;&#x50B3;&#x5165;&#x7684;&#x662F;&#x6307;&#x5411;&#x9663;&#x5217; <em>a</em> &#x7684;&#x6307;&#x6A19; <em>a_ptr</em>&#xFF0C;&#x5247;&#x56E0;&#x70BA;&#x6307;&#x6A19;&#x7684;&#x5728; 32 &#x4F4D;&#x5143;&#x4F5C;&#x696D;&#x7CFB;&#x7D71;&#x4E0A;&#x5927;&#x5C0F;&#x70BA; <strong>4 bytes</strong> (4 / 4) &#x7684;&#x7D50;&#x679C;&#x5247;&#x6703;&#x8B8A;&#x6210; <strong>1</strong>&#xFF0C;&#x800C;&#x4E26;&#x4E0D;&#x662F;&#x6211;&#x5011;&#x6240;&#x8981;&#x7684;&#x7B54;&#x6848; <strong>10</strong>&#x3002;</p>
+<p>&#x7576;&#x7136;&#x53EA;&#x8981;&#x6211;&#x5011;&#x5C0F;&#x5FC3;&#x4F7F;&#x7528;&#xFF0C;&#x9019;&#x6A23;&#x7684;&#x554F;&#x984C;&#x5176;&#x5BE6;&#x662F;&#x53EF;&#x4EE5;&#x907F;&#x514D;&#x7684;&#x3002;&#x4F46;&#x6211;&#x5011;&#x5E38;&#x5E38;&#x6709;&#x53EF;&#x80FD;&#x6703;&#x5C07;&#x9663;&#x5217;&#x900F;&#x904E;&#x6307;&#x6A19;&#x7684;&#x65B9;&#x5F0F;&#x50B3;&#x5165;&#x67D0;&#x500B; function &#x4E2D;&#xFF0C;&#x9019;&#x6A23;&#x7684;&#x60C5;&#x6CC1;&#x4E0B;&#x6211;&#x5011;&#x5C31;&#x6709;&#x53EF;&#x80FD;&#x6703;&#x5C07;&#x6307;&#x6A19;&#x8AA4;&#x7528;&#x6210;&#x9663;&#x5217;&#x50B3;&#x5165; <strong>ARRAY_SIZE()</strong> &#x800C;&#x5F97;&#x5230;&#x932F;&#x8AA4;&#x7684;&#x7D50;&#x679C;&#x3002;&#x7576;&#x7A0B;&#x5F0F;&#x6210;&#x9577;&#x5230;&#x4E00;&#x5B9A;&#x7684;&#x8907;&#x96DC;&#x5EA6;&#x5F8C;&#xFF0C;&#x985E;&#x4F3C;&#x7684;bug&#x5C31;&#x5F88;&#x6709;&#x53EF;&#x80FD;&#x88AB;&#x5FFD;&#x7565;&#x3002;</p>
+<p>&#x56E0;&#x6B64; Linux &#x5728;&#x5B9A;&#x7FA9; <strong>ARRAY_SIZE()</strong> &#x6642;&#x9664;&#x4E86;&#x900F;&#x904E;&#x4E0A;&#x8FF0;&#x7684;&#x65B9;&#x5F0F;&#x4F86;&#x53D6;&#x5F97;&#x9663;&#x5217;&#x5143;&#x6578;&#x500B;&#x6578;&#x5916;&#xFF0C;&#x9084;&#x53E6;&#x5916;&#x52A0;&#x4E0A;&#x4E86;<strong>&#x578B;&#x614B;&#x6AA2;&#x67E5;</strong>&#xFF0C;&#x4EE5;&#x78BA;&#x4FDD;&#x4F7F;&#x7528;&#x8005;&#x6240;&#x50B3;&#x5165;&#x7684;&#x53C3;&#x6578;&#x5FC5;&#x9808;&#x70BA;&#x9663;&#x5217;&#x800C;&#x975E;&#x6307;&#x6A19; (Linux&#x4E2D;&#x7684; <strong>ARRAY_SIZE()</strong> &#x662F;&#x88AB;&#x5B9A;&#x7FA9;&#x5728;&#xFF1A;<em>include/linux/kernel.h</em>)&#xFF0C;&#x5176;&#x5B9A;&#x7FA9;&#x5982;&#x4E0B;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))</span></span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x5176;&#x4E2D;&#x5728;&#x6700;&#x5C3E;&#x7AEF;&#x984D;&#x5916;&#x52A0;&#x4E86; <strong>__must_be_array()</strong> &#x7684;&#x56DE;&#x50B3;&#x503C;&#x3002;<strong>__must_be_array()</strong> &#x9019;&#x500B; macro &#x662F;&#x7528;&#x4F86;&#x5224;&#x65B7;&#x6240;&#x50B3;&#x5165;&#x7684;&#x53C3;&#x6578;&#x662F;&#x5426;&#x70BA;&#x4E00;&#x9663;&#x5217; (&#x5B9A;&#x7FA9;&#x5728;&#xFF1A;<em>include/linux/compiler-gcc.h</em>)&#xFF0C;&#x5176;&#x5B9A;&#x7FA9;&#x5982;&#x4E0B;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-comment">/* &amp;a[0] degrades to a pointer: a different type from an array */</span></span><br><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> __must_be_array(a) BUILD_BUG_ON_ZERO(__same_type((a), &amp;(a)[0]))</span></span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x5728;&#x9019;&#x908A; <strong>__must_be_array()</strong> &#x5C0D;&#x6240;&#x50B3;&#x5165;&#x7684;&#x53C3;&#x6578; <strong>a</strong> &#x505A;&#x4E86;&#x4E00;&#x6B21;<strong>&#x964D;&#x7D1A; (degrade)</strong>&#xFF0C;&#x4E26;&#x5C07;&#x5176;&#x7576;&#x4F5C;&#x7B2C;&#x4E8C;&#x500B;&#x53C3;&#x6578;&#x50B3;&#x5165; <strong>__same_type()</strong> &#x9019;&#x500B; macro&#x3002;&#x5728;&#x9019;&#x908A;&#x505A;&#x964D;&#x7D1A;&#x7684;&#x76EE;&#x7684;&#x5C31;&#x662F;&#x70BA;&#x4E86;&#x8B93;<strong>&#x9663;&#x5217;</strong>&#x8F49;&#x6210;&#x4E00;&#x500B;<strong>&#x6307;&#x6A19;</strong>&#xFF0C;&#x4F46;&#x82E5;&#x6240;&#x50B3;&#x5165;&#x7684;&#x53C3;&#x6578; <em>a</em> &#x662F;&#x500B;<strong>&#x4E0D;&#x61C9;&#x50B3;&#x5165;&#x7684;&#x6307;&#x6A19;</strong>&#xFF0C;&#x5247;&#x9019;&#x6A23;&#x7684;&#x964D;&#x7D1A;&#x8F49;&#x63DB;&#x5F8C;&#x7684;&#x7D50;&#x679C;&#x4ECD;&#x6703;&#x662F;<strong>&#x76F8;&#x540C;&#x7684;&#x539F;&#x6307;&#x6A19;</strong>&#x3002;</p>
+<p><strong>__same_type()</strong> &#x7684;&#x56DE;&#x50B3;&#x503C;&#x5247;&#x6703;&#x50B3;&#x5165; <strong>BUILD_BUG_ON_ZERO()</strong><br>(<strong>BUILD_BUG_ON_ZERO()</strong> &#x7684;&#x8AAA;&#x660E;&#x53EF;&#x4EE5;&#x53C3;&#x8003;&#xFF1A;<a href="/Linux-Kernel-BUILD-BUG-ON-ZERO-BUILD-BUG-ON-NULL/" title="BUILD_BUG_ON_ZERO() / BUILD_BUG_ON_NULL()">BUILD_BUG_ON_ZERO() / BUILD_BUG_ON_NULL()</a>)&#x3002;</p>
+<p><strong>__same_type()</strong> &#x7684;&#x5B9A;&#x7FA9;&#x5247;&#x5982;&#x4E0B; (&#x5B9A;&#x7FA9;&#x5728;&#xFF1A;<em>include/linux/compiler.h</em>)&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-comment">/* Are two types/vars the same type (ignoring qualifiers)? */</span></span><br><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">ifndef</span> __same_type</span></span><br><span class="line"><span class="hljs-meta"># <span class="hljs-meta-keyword">define</span> __same_type(a, b) __builtin_types_compatible_p(typeof(a), typeof(b))</span></span><br><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span></span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x5728;&#x9019;&#x908A;&#x6211;&#x5011;&#x53EF;&#x4EE5;&#x770B;&#x5230; <strong>__same_type()</strong> &#x547C;&#x53EB;&#x4E86; GCC &#x7684; built-in function&#xFF1A;<strong>__builtin_types_compatible_p()</strong>&#xFF1A;<br>(<strong>__builtin_types_compatible_p()</strong> &#x7684;&#x5B9A;&#x7FA9;&#x53EF;&#x4EE5;&#x53C3;&#x8003; <a href="http://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Other-Builtins.html#Other-Builtins" target="_blank" rel="noopener">GCC manual</a> &#x7684;&#x8AAA;&#x660E;)&#xFF1B;<strong>__builtin_types_compatible_p()</strong> &#x7684;&#x5B9A;&#x7FA9;&#x53EF;&#x4EE5;&#x53C3;&#x8003; <a href="http://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Other-Builtins.html#Other-Builtins" target="_blank" rel="noopener">GCC manual</a> &#x7684;&#x8AAA;&#x660E;</p>
+<blockquote>
+<p>You can use the built-in function __builtin_types_compatible_p to determine whether two types are the same.<br>This built-in function returns 1 if the unqualified versions of the types type1 and type2 (which are types, not expressions) are compatible, 0 otherwise. The result of this built-in function can be used in integer constant expressions.<br>This built-in function ignores top level qualifiers (e.g., const, volatile). For example, int is equivalent to const int.<br>The type int[] and int[5] are compatible. On the other hand, int and char * are not compatible, even if the size of their types, on the particular architecture are the same. Also, the amount of pointer indirection is taken into account when determining similarity. Consequently, short * is not similar to short **. Furthermore, two types that are typedefed are considered compatible if their underlying types are compatible.<br>An enum type is not considered to be compatible with another enum type even if both are compatible with the same integer type; this is what the C standard specifies. For example, enum {foo, bar} is not similar to enum {hot, dog}.<br>You would typically use this function in code whose execution varies depending on the arguments&#x2019; types. For example:</p>
+</blockquote>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> foo(x)                                                  \</span></span><br><span class="line">  ({                                                           \</span><br><span class="line">    typeof (x) tmp = (x);                                       \</span><br><span class="line">    <span class="hljs-keyword">if</span> (__builtin_types_compatible_p (typeof (x), <span class="hljs-keyword">long</span> <span class="hljs-keyword">double</span>)) \</span><br><span class="line">      tmp = foo_long_double (tmp);                              \</span><br><span class="line">    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (__builtin_types_compatible_p (typeof (x), <span class="hljs-keyword">double</span>)) \</span><br><span class="line">      tmp = foo_double (tmp);                                   \</span><br><span class="line">    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (__builtin_types_compatible_p (typeof (x), <span class="hljs-keyword">float</span>))  \</span><br><span class="line">      tmp = foo_float (tmp);                                    \</span><br><span class="line">    <span class="hljs-keyword">else</span>                                                        \</span><br><span class="line">      <span class="hljs-built_in">abort</span> ();                                                 \</span><br><span class="line">    tmp;                                                        \</span><br><span class="line">  })</span><br></pre></td></tr></tbody></table></figure><p></p>
+<blockquote>
+<p>Note: This construct is only available for C.</p>
+</blockquote>
+<p>&#x4E5F;&#x5C31;&#x662F;&#x8AAA; <strong>__builtin_types_compatible_p()</strong> &#x6703;&#x6AA2;&#x67E5;&#x6240;&#x50B3;&#x5165;&#x7684;&#x578B;&#x614B;&#xFF1A;<em>type_1</em> &#x548C; <em>type_2</em> &#x662F;&#x5426;&#x76F8;&#x540C;&#xFF1A;</p>
+<ul>
+<li>&#x82E5; <em>type_1</em> &#x548C; <em>type_2</em> &#x7684;&#x578B;&#x614B;&#x76F8;&#x540C;&#xFF0C;&#x5247;&#x6703;&#x56DE;&#x50B3; <strong>1</strong>&#x3002;</li>
+<li>&#x82E5; <em>type_1</em> &#x548C; <em>type_2</em> &#x7684;&#x578B;&#x614B;&#x4E0D;&#x540C;&#xFF0C;&#x5247;&#x6703;&#x56DE;&#x50B3; <strong>0</strong>&#x3002;</li>
+</ul>
+<p>&#x6B64;&#x5916;&#xFF0C;&#x70BA;&#x4E86;&#x53D6;&#x5F97;&#x53C3;&#x6578;&#x7684;&#x578B;&#x614B;&#xFF0C;&#x9019;&#x908A;&#x9084;&#x53E6;&#x5916;&#x7528;&#x5230;&#x4E86;&#x53E6;&#x4E00;&#x500B; GCC &#x7684; extension&#xFF1A;<strong>typeof()</strong>&#x3002;<strong>typeof()</strong> &#x53EF;&#x4EE5;&#x53D6;&#x5F97;&#x6240;&#x50B3;&#x5165;&#x53C3;&#x6578;&#x7684;&#x578B;&#x614B;&#xFF0C;&#x56E0;&#x6B64;&#x6211;&#x5011;&#x53EF;&#x4EE5;&#x900F;&#x904E; <strong>typeof()</strong> &#x4F86;&#x5BA3;&#x544A;&#x4E00;&#x500B;&#x8207;&#x6240;&#x50B3;&#x5165;&#x53C3;&#x6578;&#x4E00;&#x6A21;&#x4E00;&#x6A23;&#x7684;&#x65B0;&#x8B8A;&#x6578;&#xFF1A;<br>(<strong>typeof()</strong> &#x7684;&#x5B9A;&#x7FA9;&#x540C;&#x6A23;&#x53EF;&#x4EE5;&#x53C3;&#x8003; <a href="http://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Typeof.html#Typeof" target="_blank" rel="noopener">GCC manual</a> &#x7684;&#x8AAA;&#x660E;)</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> &amp;lt;stdio.h&amp;gt;</span></span><br><span class="line"> </span><br><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> ARRAY_SIZE(arr)     (sizeof(arr) / sizeof(arr[0]))</span></span><br><span class="line"> </span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">        <span class="hljs-keyword">int</span> a[<span class="hljs-number">10</span>];</span><br><span class="line">        typeof(a) b;</span><br><span class="line"> </span><br><span class="line">        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d\n&quot;</span>, ARRAY_SIZE(a));</span><br><span class="line">        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d\n&quot;</span>, ARRAY_SIZE(b));</span><br><span class="line">       </span><br><span class="line">        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x5728;&#x6B64;&#x6211;&#x5011;&#x5BA3;&#x544A;&#x4E00;&#x500B;&#x8207;&#x9663;&#x5217; <em>a</em> &#x578B;&#x614B;&#x4E00;&#x6A21;&#x4E00;&#x6A23;&#x7684;&#x9663;&#x5217; <em>b</em>&#xFF0C;&#x56E0;&#x6B64;&#x900F;&#x904E; <strong>ARRAY_SIZE()</strong> &#x8A08;&#x7B97;&#x9663;&#x5217;&#x5143;&#x6578;&#x500B;&#x6578;&#x7684;&#x7D50;&#x679C;&#x90FD;&#x6703;&#x662F; <strong>10</strong>&#x3002;</p>
+<hr>
+<p>&#x56DE;&#x5230; <strong>__same_type()</strong>&#xFF1A;</p>
+<p>&#x900F;&#x904E; <strong>__builtin_types_compatible_p()</strong> &#x548C; <strong>typeof()</strong>&#xFF0C;&#x6211;&#x5011;&#x5C31;&#x53EF;&#x4EE5;&#x77E5;&#x9053;&#x6240;&#x50B3;&#x5165;&#x7684;&#x5169;&#x500B;&#x53C3;&#x6578;&#x578B;&#x614B;&#x662F;&#x5426;&#x76F8;&#x540C;&#xFF1A;</p>
+<ul>
+<li><p>&#x5982;&#x679C;&#x76F8;&#x540C; (&#x50B3;&#x5165; <strong>ARRAY_SIZE()</strong> &#x7684;&#x53C3;&#x6578;&#x70BA;&#x4E00;&#x4E0D;&#x61C9;&#x50B3;&#x5165;&#x7684;&#x6307;&#x6A19;)&#xFF0C;&#x5247; <strong>__builtin_types_compatible_p()</strong> &#x5C31;&#x6703;&#x56DE;&#x50B3; <strong>1</strong>&#xFF0C;&#x518D;&#x50B3;&#x5165; <strong>BUILD_BUG_ON_ZERO()</strong> &#x5F8C;&#x5C31;&#x6703;&#x9020;&#x6210;&#x7DE8;&#x8B6F;&#x932F;&#x8AA4;&#x3002;</p>
+</li>
+<li><p>&#x4F46;&#x5982;&#x679C;&#x4E0D;&#x540C; (&#x50B3;&#x5165; <strong>ARRAY_SIZE()</strong> &#x7684;&#x53C3;&#x6578;&#x70BA;&#x4E00;&#x6B63;&#x78BA;&#x7684;&#x9663;&#x5217;)&#xFF0C;&#x5247; <strong>__builtin_types_compatible_p()</strong> &#x5C31;&#x6703;&#x56DE;&#x50B3; <strong>0</strong>&#xFF0C;&#x518D;&#x50B3;&#x5165; <strong>BUILD_BUG_ON_ZERO()</strong> &#x5F8C;&#x5F97;&#x5230;&#x7684;&#x7D50;&#x679C;&#x70BA; <strong>0</strong>&#xFF0C;&#x52A0;&#x56DE; <strong>ARRAY_SIZE()</strong> &#x5F8C;&#x4E26;&#x4E0D;&#x6703;&#x5F71;&#x97FF;&#x5176;&#x539F;&#x5148;&#x7D50;&#x679C;&#x3002;</p>
+</li>
+</ul>
+<p>&#x900F;&#x904E;&#x9019;&#x6A23;&#x7684;&#x65B9;&#x5F0F;&#xFF0C;&#x6211;&#x5011;&#x4FBF;&#x53EF;&#x5728; compile-time &#x7684;&#x6642;&#x5019;&#x5C31;&#x767C;&#x73FE;&#x6240;&#x50B3;&#x5165; <strong>ARRAY_SIZE()</strong> &#x7684;&#x53C3;&#x6578;&#x662F;&#x5426;&#x70BA;&#x4E00;&#x932F;&#x8AA4;&#x7684;&#x6307;&#x6A19;&#xFF0C;&#x4E26;&#x53EF;&#x5728;&#x7DE8;&#x8B6F;&#x6642;&#x671F;&#x52A0;&#x4EE5;&#x4FEE;&#x6B63;&#x2026;</p>
+<p>&#x6B64;&#x5916; Jserv &#x5927;&#x5927; <a href="http://blog.linux.org.tw/~jserv/archives/001888.html" target="_blank" rel="noopener">&#x90A3;&#x7BC7;&#x6587;&#x7AE0;</a> &#x4E0B;&#x9762;&#x7684;&#x56DE;&#x61C9;&#x4E5F;&#x6709;&#x4EBA;&#x63D0;&#x51FA;&#x4E86;&#x5176;&#x4ED6;&#x4E0D;&#x540C;&#x7684; <a href="http://heaven.branda.to/~thinker/GinGin_CGI.py/show_id_doc/236" target="_blank" rel="noopener">&#x4F5C;&#x6CD5;</a>&#x3002;&#x96D6;&#x7136;&#x5176;&#x539F;&#x610F;&#x662F;&#x70BA;&#x4E86;&#x8981;&#x907F;&#x514D;&#x4F7F;&#x7528; GCC extension &#x7684;&#xFF0C;&#x4F46;&#x6700;&#x5F8C;&#x767C;&#x73FE;&#x539F;&#x4F86; <strong>typeof()</strong> &#x4E5F;&#x662F;&#x4E00;&#x500B; GCC extension&#xFF0C;&#x4E0D;&#x904E;&#x4F5C;&#x6CD5;&#x540C;&#x6A23;&#x53EF;&#x4EE5;&#x4F5C;&#x70BA;&#x53C3;&#x8003;&#x3002;</p>
+<hr>
+<p>Extra References:</p>
+<ul>
+<li><a href="http://blog.linux.org.tw/~jserv/archives/001876.html" target="_blank" rel="noopener">sizeof &#x5728;&#x8A9E;&#x8A00;&#x5C64;&#x9762;&#x7684;&#x9677;&#x9631;</a></li>
+</ul>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/C/">#C</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/C/">#C++</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Linux-Kernel/">#Linux Kernel</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/QEMU-Decodetree-%E8%AA%9E%E6%B3%95%E4%BB%8B%E7%B4%B9-Part-1/">QEMU Decodetree 語法介紹 (Part 1.)</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/Linux-Kernel-BUILD-BUG-ON-ZERO-BUILD-BUG-ON-NULL/">Linux Kernel: BUILD_BUG_ON_ZERO() / BUILD_BUG_ON_NULL()</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2020 Frank Chang&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/" target="_blank" rel="noopener">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+</body>
+</html>

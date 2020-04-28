@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>QEMU: 使用 Decodetree 新增 RISC-V 指令 - 0xc0de</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+
+
+<meta name="description" content="C, QEMU, Linux Kernel and RISC-V">
+
+
+
+<meta name="keywords" content="c,qemu,linux,kernel,risc-v">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+
+<meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="0xc0de" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                <img src="/images/logo.png" alt="" height="28">
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            QEMU: 使用 Decodetree 新增 RISC-V 指令
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            <time datetime="2020-02-16T09:30:00.000Z" itemprop="datePublished">2月 16 2020</time>
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/QEMU/">QEMU</a><span>></span><a class="article-category-link" href="/categories/QEMU/RISC-V/">RISC-V</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            15 分钟 讀完 (約 2189 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><blockquote>
+<p>&#x26A0;&#xFE0F; &#x672C;&#x6587;&#x6240;&#x4F7F;&#x7528;&#x7684; QEMU &#x7248;&#x672C;&#x70BA;&#xFF1A;<code>v4.2.0</code></p>
+</blockquote>
+<p>&#x5728;&#x4E4B;&#x524D;&#x7684;&#x6587;&#x7AE0;&#x4E2D; (<a href="/QEMU-Decodetree-&#x8A9E;&#x6CD5;&#x4ECB;&#x7D39;-Part-1">Part 1.</a>, <a href="/QEMU-Decodetree-&#x8A9E;&#x6CD5;&#x4ECB;&#x7D39;-Part-2">Part 2.</a>) &#x6211;&#x5011;&#x63D0;&#x5230;&#x4E86;&#x5982;&#x4F55;&#x4F7F;&#x7528; <code>Decodetree</code> &#x4F86;&#x5B9A;&#x7FA9;&#x6307;&#x4EE4;&#x7684; decoder&#x3002;&#x672C;&#x7BC7;&#x6587;&#x7AE0;&#x5C31;&#x5BE6;&#x969B;&#x4F7F;&#x7528; <code>Decodetree</code> &#x4F86;&#x5B9A;&#x7FA9;&#x4E00;&#x500B; QEMU RISC-V &#x76EE;&#x524D;&#x5C1A;&#x672A;&#x652F;&#x63F4;&#x7684;&#x6307;&#x4EE4; - <code>B(itmanip) Extension</code> &#x4E2D;&#x7684; <code>pcnt</code> &#x6307;&#x4EE4;&#xFF0C;&#x4E26;&#x5BE6;&#x505A;&#x5176;&#x884C;&#x70BA;&#x3002;</p>
+<a id="more"></a>
+
+<hr>
+<h1 id="pcnt-&#x6307;&#x4EE4;"><a href="#pcnt-&#x6307;&#x4EE4;" class="headerlink" title="pcnt &#x6307;&#x4EE4;"></a>pcnt &#x6307;&#x4EE4;</h1><p><code>pcnt</code> &#x6307;&#x4EE4;&#x7684;&#x5B9A;&#x7FA9;&#x5982;&#x4E0B;&#xFF1A;</p>
+<blockquote>
+<p>This instruction counts the number of 1 bits in a register. This operations is known as population<br>count, popcount, sideways sum, bit summation, or Hamming weight.</p>
+</blockquote>
+<p>&#x5176;&#x6307;&#x4EE4;&#x683C;&#x5F0F;&#x70BA;&#xFF1A;</p>
+<pre><code>| 1 0 9 8 7 6 5 | 4 3 2 1 0 | 9 8 7 6 5 | 4 3 2 | 1 0 9 8 7 | 6 5 4 3 2 1 0 |
+|===========================================================================|
+|    0110000    |   00010   |    rs1    |  001  |     rd    |    0010011    | PCNT</code></pre>
+
+<hr>
+<h1 id="&#x5B89;&#x88DD;-toolchain"><a href="#&#x5B89;&#x88DD;-toolchain" class="headerlink" title="&#x5B89;&#x88DD; toolchain"></a>&#x5B89;&#x88DD; toolchain</h1><p>&#x7531;&#x65BC; <code>B Extension</code> &#x5C1A;&#x672A;&#x6B63;&#x5F0F;&#x5B9A;&#x7A3F; (Draft)&#xFF0C;&#x56E0;&#x6B64;&#x5FC5;&#x9808;&#x81F3; <a href="https://github.com/riscv/riscv-bitmanip/tree/master/tools" target="_blank" rel="noopener">riscv-bitmanip repo</a> &#x4E0B;&#x8F09; toolchain&#xFF0C;&#x4E26;&#x4F9D;&#x7167;&#x8A72; repo &#x7684;&#x6307;&#x793A;&#x5B89;&#x88DD;&#xFF1A;</p>
+<pre><code>sudo mkdir /opt/riscv64b
+sudo chown $USER: /opt/riscv64b
+bash build-all.sh</code></pre>
+
+<p>&#x6B64;&#x5B89;&#x88DD;&#x9664;&#x4E86; toolchain &#x5916;&#xFF0C;&#x9084;&#x6703;&#x5B89;&#x88DD;&#x652F;&#x63F4; <code>B Extension</code> &#x7684; <code>Spike (riscv-isa-sim)</code> &#x53CA; <code>riscv-pk</code> (P.S. &#x76EE;&#x524D;&#x7684; script &#x662F;&#x5BEB;&#x6B7B;&#x5B89;&#x88DD;&#x8DEF;&#x5F91;&#x70BA;&#xFF1A;<code>/opt/riscv64b</code>)&#x3002;</p>
+<hr>
+<h1 id="&#x7BC4;&#x4F8B;&#x7A0B;&#x5F0F;"><a href="#&#x7BC4;&#x4F8B;&#x7A0B;&#x5F0F;" class="headerlink" title="&#x7BC4;&#x4F8B;&#x7A0B;&#x5F0F;"></a>&#x7BC4;&#x4F8B;&#x7A0B;&#x5F0F;</h1><p>&#x5728;&#x5B89;&#x88DD;&#x597D;&#x5F8C;&#xFF0C;&#x6211;&#x5011;&#x53EF;&#x4EE5;&#x5BEB;&#x4E00;&#x500B;&#x7BC4;&#x4F8B;&#x7A0B;&#x5F0F;&#xFF0C;&#x4E26;&#x642D;&#x914D; Spike &#x4F86;&#x505A;&#x6E2C;&#x8A66;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><figcaption><span>pcnt_example.c</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> &amp;lt;stdio.h&amp;gt;</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">count_set_bits</span><span class="hljs-params">(<span class="hljs-keyword">int</span> num)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-keyword">int</span> count;</span><br><span class="line">    __asm__(<span class="hljs-string">&quot;pcnt %0, %1\n&quot;</span></span><br><span class="line">            : <span class="hljs-string">&quot;=r&quot;</span>(count)</span><br><span class="line">            : <span class="hljs-string">&quot;r&quot;</span>(num)</span><br><span class="line">            :);</span><br><span class="line">    <span class="hljs-keyword">return</span> count;</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-keyword">int</span> num = <span class="hljs-number">187</span>;</span><br><span class="line">    <span class="hljs-keyword">int</span> result = count_set_bits(num);</span><br><span class="line"></span><br><span class="line">    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;num = %d\n&quot;</span>, num);</span><br><span class="line">    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;# of set bits = %d\n&quot;</span>, result);</span><br><span class="line"></span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x6B64;&#x7BC4;&#x4F8B;&#x7A0B;&#x5F0F;&#x505A;&#x7684;&#x4E8B;&#x60C5;&#x5F88;&#x7C21;&#x55AE;&#xFF0C;&#x900F;&#x904E; inline assembly&#xFF1A;<code>pcnt</code> &#x6307;&#x4EE4;&#xFF0C;&#x5C07; <code>int num = 187</code> &#x7684; <code>1 bits</code> &#x500B;&#x6578;&#x7D66;&#x8A08;&#x7B97;&#x51FA;&#x4F86;&#x3002;</p>
+<p>&#x900F;&#x904E;&#x525B;&#x525B;&#x7684; toolchain &#x7DE8;&#x8B6F;&#x6B64;&#x7A0B;&#x5F0F;&#xFF1A;</p>
+<pre><code>/opt/riscv64b/bin/riscv64-unknown-elf-gcc -Wall -march=rv64gb -Os -o pcnt_example pcnt_example.c</code></pre>
+
+<ul>
+<li>-march=rv64gb&#xFF1A;&#x6307;&#x5B9A; target ISA &#x70BA; <code>RISC-V 64-bit</code> + <code>g (IMAFD base)</code> + <code>b (B Extension)</code>&#x3002;</li>
+</ul>
+<p>&#x900F;&#x904E; objdump &#x89C0;&#x770B;&#x5176;&#x53CD;&#x7D44;&#x8B6F;&#x78BC;&#xFF1A;</p>
+<pre><code>/opt/riscv64b/bin/riscv64-unknown-elf-objdump -S pcnt_example &gt; pcnt_example.s</code></pre>
+
+
+<p></p><figure class="highlight plain hljs"><figcaption><span>pcnt_example.s</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">pcnt_example:     file format elf64-littleriscv</span><br><span class="line"></span><br><span class="line">Disassembly of section .text:</span><br><span class="line"></span><br><span class="line">00000000000100b0 &lt; main &gt;:</span><br><span class="line">   100b0:       00017537                lui     a0,0x17</span><br><span class="line">   100b4:       ff010113                addi    sp,sp,-16</span><br><span class="line">   100b8:       0bb00593                li      a1,187</span><br><span class="line">   100bc:       8b850513                addi    a0,a0,-1864 # 168b8 &lt;__trunctfdf2+0x2ce&gt;</span><br><span class="line">   100c0:       00113423                sd      ra,8(sp)</span><br><span class="line">   100c4:       00813023                sd      s0,0(sp)</span><br><span class="line">   100c8:       2ac000ef                jal     ra,10374 &lt;printf&gt;</span><br><span class="line">   100cc:       0bb00413                li      s0,187</span><br><span class="line">   100d0:       00017537                lui     a0,0x17</span><br><span class="line">   100d4:       60241413                pcnt    s0,s0</span><br><span class="line">   100d8:       0004041b                sext.w  s0,s0</span><br><span class="line">   100dc:       00040593                mv      a1,s0</span><br><span class="line">   100e0:       8c850513                addi    a0,a0,-1848 # 168c8 &lt;__trunctfdf2+0x2de&gt;</span><br><span class="line">   100e4:       290000ef                jal     ra,10374 &lt;printf&gt;</span><br><span class="line">   100e8:       00813083                ld      ra,8(sp)</span><br><span class="line">   100ec:       00013403                ld      s0,0(sp)</span><br><span class="line">   100f0:       00000513                li      a0,0</span><br><span class="line">   100f4:       01010113                addi    sp,sp,16</span><br><span class="line">   100f8:       00008067                ret</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x53EF;&#x4EE5;&#x770B;&#x5230; <code>Line:15</code> &#x547C;&#x53EB;&#x4E86; <code>pcnt</code> &#x6307;&#x4EE4;&#xFF1A;<code>pcnt s0, s0</code>&#x3002; </p>
+<p>&#x900F;&#x904E; Spike &#x57F7;&#x884C;&#x7A0B;&#x5F0F;&#xFF1A;</p>
+<pre><code>/opt/riscv64b/bin/spike --isa=RV64GCB pk pcnt_example</code></pre>
+
+<pre><code>bbl loader
+num = 187
+# of set bits = 6</code></pre>
+
+<p><code>187</code> &#x7684;&#x4E8C;&#x9032;&#x4F4D;&#x70BA; <code>10111011</code>&#xFF0C;<code>1 bits</code> &#x500B;&#x6578;&#x70BA; <code>6</code>&#xFF0C;&#x8207;&#x7A0B;&#x5F0F;&#x8F38;&#x51FA;&#x7684;&#x7D50;&#x679C;&#x4E00;&#x81F4;&#x3002;</p>
+<p>&#x540C;&#x6A23;&#x7684;&#x7A0B;&#x5F0F;&#xFF0C;&#x6211;&#x5011;&#x4F7F;&#x7528; QEMU &#x4F86;&#x57F7;&#x884C;&#xFF1A;</p>
+<pre><code>./qemu/riscv64-linux-user/qemu-riscv64 pcnt_example</code></pre>
+
+<pre><code>num = 187
+Illegal instruction</code></pre>
+
+<p>&#x53EF;&#x4EE5;&#x770B;&#x5230;&#xFF0C;&#x76EE;&#x524D; QEMU &#x5C1A;&#x672A;&#x652F;&#x63F4; <code>pcnt</code> &#x6307;&#x4EE4;&#xFF0C;&#x56E0;&#x6B64;&#x7576;&#x57F7;&#x884C;&#x5230; <code>pcnt</code> &#x6307;&#x4EE4;&#x6642;&#xFF0C;&#x4FBF;&#x6703;&#x5674; <code>Illegal instruction</code> &#x7684;&#x932F;&#x8AA4;&#x8A0A;&#x606F;&#x3002;</p>
+<hr>
+<h1 id="&#x5728;-QEMU-&#x4E2D;&#x65B0;&#x589E;-pcnt-&#x6307;&#x4EE4;"><a href="#&#x5728;-QEMU-&#x4E2D;&#x65B0;&#x589E;-pcnt-&#x6307;&#x4EE4;" class="headerlink" title="&#x5728; QEMU &#x4E2D;&#x65B0;&#x589E; pcnt &#x6307;&#x4EE4;"></a>&#x5728; QEMU &#x4E2D;&#x65B0;&#x589E; pcnt &#x6307;&#x4EE4;</h1><p>&#x6839;&#x64DA;&#x524D;&#x8FF0; <code>B Extension</code> spec. &#x6240;&#x5217;&#x7684; <code>pcnt</code> &#x6307;&#x4EE4;&#x683C;&#x5F0F;&#xFF0C;&#x53C3;&#x8003;&#x76EE;&#x524D; QEMU RISC-V &#x73FE;&#x6709;&#x7684; <code>Decodetree</code>&#xFF1A;<code>target/riscv/insn32.decode</code>&#xFF0C;<code>pcnt</code> &#x7684; <code>Pattern</code> &#x53EF;&#x4EE5;&#x642D;&#x914D; <code>@r2</code> &#x7684; <code>Format</code> (&#x53EA;&#x6709; <code>rs1</code> &#x53CA; <code>rd</code> &#x9019;&#x5169;&#x500B; <code>Fields</code>)&#xFF0C;&#x5176;&#x5B8C;&#x6574;&#x5B9A;&#x7FA9;&#x5982;&#x4E0B;&#xFF1A;</p>
+<h3 id="Field"><a href="#Field" class="headerlink" title="Field"></a>Field</h3><figure class="highlight plain hljs"><figcaption><span>./target/riscv/insn32.decode</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">%rs1       15:5</span><br><span class="line">%rd        7:5</span><br></pre></td></tr></tbody></table></figure>
+
+<h3 id="Format"><a href="#Format" class="headerlink" title="Format"></a>Format</h3><figure class="highlight plain hljs"><figcaption><span>./target/riscv/insn32.decode</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line">@r2      .......   ..... ..... ... ..... ....... %rs1 %rd</span><br></pre></td></tr></tbody></table></figure>
+
+<h3 id="Pattern"><a href="#Pattern" class="headerlink" title="Pattern"></a>Pattern</h3><p>&#x6211;&#x5011;&#x53EF;&#x4EE5;&#x5B9A;&#x7FA9; <code>pcnt</code> &#x7684; <code>Pattern</code> &#x5982;&#x4E0B;&#xFF1A;</p>
+<figure class="highlight plain hljs"><figcaption><span>./target/riscv/insn32.decode</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">207</span><br><span class="line">208</span><br></pre></td><td class="code"><pre><span class="line"># *** RV32B Standard Extension ***</span><br><span class="line">pcnt       0110000  00010 ..... 001 ..... 0010011 @r2</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x6240;&#x6703;&#x7522;&#x751F;&#x7684; decoder &#x5982;&#x4E0B;&#xFF1A;</p>
+<figure class="highlight c hljs"><figcaption><span>./riscv64-linux-user/target/riscv/decode_insn32.inc.c</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> {</span></span><br><span class="line">    <span class="hljs-keyword">int</span> rd;</span><br><span class="line">    <span class="hljs-keyword">int</span> rs1;</span><br><span class="line">} arg_decode_insn3213;</span><br></pre></td></tr></tbody></table></figure>
+
+<figure class="highlight c hljs"><figcaption><span>./riscv64-linux-user/target/riscv/decode_insn32.inc.c</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">491</span><br><span class="line">492</span><br><span class="line">493</span><br><span class="line">494</span><br><span class="line">495</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">decode_insn32_extract_r2</span><span class="hljs-params">(DisasContext *ctx, arg_decode_insn3213 *a, <span class="hljs-keyword">uint32_t</span> insn)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    a-&gt;rs1 = extract32(insn, <span class="hljs-number">15</span>, <span class="hljs-number">5</span>);</span><br><span class="line">    a-&gt;rd = extract32(insn, <span class="hljs-number">7</span>, <span class="hljs-number">5</span>);</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<figure class="highlight hljs"><figcaption><span>./riscv64-linux-user/target/riscv/decode_insn32.inc.c</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">673</span><br><span class="line">674</span><br><span class="line">675</span><br><span class="line">676</span><br><span class="line">677</span><br><span class="line">678</span><br><span class="line">679</span><br><span class="line">680</span><br><span class="line">681</span><br><span class="line">682</span><br><span class="line">683</span><br><span class="line">684</span><br><span class="line">685</span><br><span class="line">686</span><br></pre></td><td class="code"><pre><span class="line">&lt;pre&gt;</span><br><span class="line">            <span class="hljs-keyword">case</span> <span class="hljs-number">0x1</span>:</span><br><span class="line">                <span class="hljs-comment">/* 01...... ........ .001.... .0010011 */</span></span><br><span class="line">                decode_insn32_extract_r2(ctx, &amp;u.f_decode_insn3213, insn);</span><br><span class="line">                <span class="hljs-keyword">switch</span> ((insn &gt;&gt; <span class="hljs-number">20</span>) &amp; <span class="hljs-number">0x3ff</span>) {</span><br><span class="line">                <span class="hljs-keyword">case</span> <span class="hljs-number">0x202</span>:</span><br><span class="line">                    <span class="hljs-comment">/* 01100000 0010.... .001.... .0010011 */</span></span><br><span class="line">                    <span class="hljs-comment">/* /home/frankchang/qemu/target/riscv/insn32.decode:208 */</span></span><br><span class="line">                    <span class="hljs-keyword">if</span> (trans_pcnt(ctx, &amp;u.f_decode_insn3213)) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">                    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">                }</span><br><span class="line">                <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;</span><br><span class="line">            }</span><br><span class="line">&lt;/pre&gt;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x7531;&#x65BC; <code>@r2 Format</code> &#x4E26;&#x6C92;&#x6709;&#x53C3;&#x8003;&#x4EFB;&#x4F55;&#x7684; <code>Argument Set</code>&#xFF0C;&#x56E0;&#x6B64; <code>Decodetree</code> &#x6703;&#x81EA;&#x52D5;&#x6839;&#x64DA; <code>Format</code> &#x6240;&#x53C3;&#x8003;&#x5230;&#x7684; <code>Fields</code> (<code>rs1</code>&#x3001;<code>rd</code>) &#x52D5;&#x614B;&#x7522;&#x751F; <code>argument set struct</code>: <code>arg_decode_insn3213</code>&#x3002;</p>
+<p>&#x6B64;&#x5916;&#xFF0C;&#x7531; <code>pcnt Pattern</code> &#x6240;&#x7522;&#x751F;&#x7684; decode function &#x6703;&#x547C;&#x53EB; <code>decode_insn32_extract_r2()</code> &#x9019;&#x500B; extract function &#x4F86;&#x89E3;&#x6790;&#x6307;&#x4EE4;&#x4E2D; <code>rs2</code> &#x53CA; <code>rd</code> &#x6B04;&#x4F4D;&#x7684;&#x503C;&#xFF0C;&#x4E26;&#x66F4;&#x65B0;&#x6240;&#x50B3;&#x5165; <code>arg_decode_insn3213</code> &#x5C0D;&#x61C9;&#x7684;&#x6B04;&#x4F4D;&#xFF0C;&#x800C;&#x5F8C;&#x518D;&#x547C;&#x53EB; <code>trans_pcnt()</code> &#x4F86;&#x57F7;&#x884C; <code>pcnt</code> &#x6307;&#x4EE4; (&#x7522;&#x751F;&#x5C0D;&#x61C9;&#x7684; <code>TCG ops</code>)&#x3002;&#x56E0;&#x6B64;&#xFF0C;&#x6211;&#x5011;&#x9084;&#x5FC5;&#x9808;&#x5B9A;&#x7FA9; <code>trans_pcnt()</code> &#x4F86;&#x5BE6;&#x4F5C; <code>pcnt</code> &#x7684;&#x6307;&#x4EE4;&#x884C;&#x70BA;&#x3002;</p>
+<hr>
+<p>&#x53C3;&#x8003; <code>B Extension</code> spec. &#x4E2D;&#xFF0C;<code>pcnt</code> &#x6307;&#x4EE4;&#x7684;&#x5BE6;&#x4F5C;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">uint_xlen_t</span> <span class="hljs-title">pcnt</span><span class="hljs-params">(<span class="hljs-keyword">uint_xlen_t</span> rs1)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    <span class="hljs-keyword">int</span> count = <span class="hljs-number">0</span>;</span><br><span class="line">    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> index = <span class="hljs-number">0</span>; index &lt; XLEN; index++)</span><br><span class="line">    count += (rs1 &gt;&gt; index) &amp; <span class="hljs-number">1</span>;</span><br><span class="line">    <span class="hljs-keyword">return</span> count;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x53CA; Spike &#x4E2D;&#xFF0C;<code>pcnt</code> &#x6307;&#x4EE4;&#x7684;&#x5BE6;&#x4F5C;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><figcaption><span>riscv-isa-sim/riscv/insns/pcnt.h </span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">require_extension(<span class="hljs-string">&apos;B&apos;</span>);</span><br><span class="line"><span class="hljs-keyword">reg_t</span> x = <span class="hljs-number">0</span>;</span><br><span class="line"><span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; xlen; i++)</span><br><span class="line">  <span class="hljs-keyword">if</span> (<span class="hljs-number">1</span> &amp; (RS1 &gt;&gt; i)) x++;</span><br><span class="line">WRITE_RD(sext_xlen(x));</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x5BE6;&#x4F5C;&#x5F88;&#x7C21;&#x55AE;&#xFF0C;&#x6BCF;&#x6B21;&#x8FF4;&#x5708; right shift <code>rs1</code> <code>i</code> &#x500B; bits &#x4E26;&#x8207; <code>1</code> &#x505A; <code>AND</code>&#xFF0C;&#x82E5;&#x70BA; <code>true</code> &#x5C31;&#x5C07; <code>count</code> &#x52A0; <code>1</code>&#xFF0C;&#x6700;&#x5F8C;&#x56DE;&#x50B3;&#x7684; <code>count</code> &#x5C31;&#x662F; <code>1 bits</code> &#x500B;&#x6578;&#x3002;</p>
+<hr>
+<p><code>trans_pcnt()</code> &#x5BE6;&#x4F5C;&#x4E86; <code>pcnt</code> &#x6307;&#x4EE4;&#x5C0D;&#x61C9;&#x7684; <code>TCG ops</code>&#x3002;QEMU &#x5728;&#x57F7;&#x884C;&#x6642;&#xFF0C;&#x6703;&#x5C07; <code>target instructions</code> (e.g. RISC-V instructions) &#x8F49;&#x8B6F;&#x6210; <code>TCG ops</code>&#xFF0C;&#x800C; <code>TCG ops</code> &#x5247;&#x6703;&#x518D;&#x8F49;&#x8B6F;&#x70BA; <code>host instructions</code> (e.g. x86 instruction)&#x3002;</p>
+<figure class="highlight plain hljs"><figcaption><span>QEMU dynamic instructions translation</span></figcaption><table><tbody><tr><td class="code"><pre><span class="line">+---------------------+      +---------+      +-------------------+</span><br><span class="line">| Target Instructions | ---&gt; | TCG ops | ---&gt; | Host instructions |</span><br><span class="line">+---------------------+      +---------+      +-------------------+</span><br><span class="line">     (e.g. RISC-V)                                  (e.g. x86)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>&#x95DC;&#x65BC; <code>TCG</code> &#x7684;&#x8AAA;&#x660E;&#xFF0C;&#x53EF;&#x4EE5;&#x53C3;&#x8003; QEMU &#x7684; documentations&#xFF1A;<a href="https://github.com/qemu/qemu/blob/master/docs/devel/tcg.rst" target="_blank" rel="noopener">Translator Internals</a>&#x3001;<a href="https://github.com/qemu/qemu/blob/master/tcg/README" target="_blank" rel="noopener">TCG README</a>&#x3002;</p>
+<p>&#x65B0;&#x589E;&#x4E00;&#x6A94;&#x6848;&#xFF1A;<code>./target/riscv/insn_trans/trans_rvb.inc.c</code> &#x4F86;&#x5B9A;&#x7FA9; <code>B Extension</code> &#x6307;&#x4EE4;&#x7684;&#x5BE6;&#x4F5C; (&#x7576;&#x7136;&#xFF0C;&#x76EE;&#x524D;&#x53EA;&#x6709; <code>pcnt</code> &#x6307;&#x4EE4;)&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><figcaption><span>./target/riscv/insn_trans/trans_rvb.inc.c</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-comment">/*</span></span><br><span class="line"><span class="hljs-comment"> * RISC-V translation routines for the RVB Standard Extension.</span></span><br><span class="line"><span class="hljs-comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">trans_pcnt</span><span class="hljs-params">(DisasContext *ctx, arg_pcnt *a)</span> </span>{</span><br><span class="line">    <span class="hljs-keyword">if</span> (a-&gt;rd != <span class="hljs-number">0</span>) {</span><br><span class="line">        TCGv t0 = tcg_temp_new();</span><br><span class="line">        gen_get_gpr(t0, a-&gt;rs1);</span><br><span class="line">        gen_helper_pcnt(cpu_gpr[a-&gt;rd], t0);</span><br><span class="line">        tcg_temp_free(t0);</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x7531;&#x65BC;&#x5C0D; <code>x0</code> (<code>zero register</code>) &#x7684;&#x5BEB;&#x5165;&#x90FD;&#x6703;&#x88AB;&#x5FFD;&#x7565;&#xFF0C;&#x56E0;&#x6B64;&#x9996;&#x5148;&#x5224;&#x65B7; <code>rd</code> &#x662F;&#x5426;&#x70BA; <code>0</code>&#xFF0C;&#x82E5;&#x70BA; <code>0</code> &#x5247;&#x4E0D;&#x505A;&#x4EFB;&#x4F55;&#x7684;&#x4E8B;&#x60C5;&#x3002;</p>
+<p>&#x518D;&#x4F86;&#x5BA3;&#x544A;&#x4E00; TCG variable&#xFF1A;<code>t0</code>&#xFF0C;&#x4E26;&#x900F;&#x904E; <code>gen_get_gpr()</code> &#x5C07; <code>rs1</code> &#x66AB;&#x5B58;&#x5668;&#x7684;&#x503C; (&#x5982; <code>pcnt_example</code> &#x4E2D; <code>pcnt s0, s0</code> &#x6307;&#x4EE4;&#xFF0C;<code>rs1</code> &#x5373;&#x70BA; <code>s0</code>&#xFF0C;&#x4E5F;&#x5C31;&#x662F; <code>x8</code>)&#xFF0C;&#x8F09;&#x5165;&#x5230; <code>t0</code>&#x3002;</p>
+<p>&#x9019;&#x908A;&#x9084;&#x547C;&#x53EB;&#x4E86;&#x6211;&#x5011;&#x6240;&#x5B9A;&#x7FA9;&#x5E6B;&#x6211;&#x5011;&#x8655;&#x7406; <code>pcnt</code> &#x8A08;&#x7B97; <code>1 bits</code> &#x500B;&#x6578;&#x7684; <code>pcnt</code> helper function&#xFF1A;<code>gen_helper_pcnt()</code>&#x3002;&#x8A72; helper function &#x6703;&#x5728;&#x8A08;&#x7B97;&#x5B8C;&#x5F8C;&#xFF0C;&#x5C07;&#x6700;&#x5F8C;&#x7684;&#x7D50;&#x679C;&#x5B58;&#x81F3; <code>rd</code> (i.e. <code>cpu_gpr[a-&gt;rd]</code>) &#x66AB;&#x5B58;&#x5668;&#x4E2D;&#x3002;</p>
+<p>&#x6700;&#x5F8C;&#x5225;&#x5FD8;&#x4E86;&#x8981;&#x91CB;&#x653E;&#x4E4B;&#x524D;&#x6240;&#x5BA3;&#x544A;&#x7684; TCG variable&#xFF1A;<code>t0</code>&#x3002;</p>
+<p>P.S. &#x5176;&#x5BE6;&#x9019;&#x908A;&#x53EF;&#x4EE5;&#x66F4;&#x7C21;&#x55AE;&#x7684;&#x76F4;&#x63A5;&#x5C07; <code>cpu_gpr[a-&gt;rs1]</code> &#x50B3;&#x5165;&#xFF0C;&#x7701;&#x7565; TCG variable&#xFF1A;<code>t0</code> &#x7684;&#x5BA3;&#x544A;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><figcaption><span>./target/riscv/insn_trans/trans_rvb.inc.c</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-comment">/*</span></span><br><span class="line"><span class="hljs-comment"> * RISC-V translation routines for the RVB Standard Extension.</span></span><br><span class="line"><span class="hljs-comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">trans_pcnt</span><span class="hljs-params">(DisasContext *ctx, arg_pcnt *a)</span> </span>{</span><br><span class="line">    <span class="hljs-keyword">if</span> (a-&gt;rd != <span class="hljs-number">0</span>) {</span><br><span class="line">        gen_helper_pcnt(cpu_gpr[a-&gt;rd], cpu_gpr[a-&gt;rs1]);</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p><code>pcnt</code> &#x7684; helper function &#x5B9A;&#x7FA9;&#x5982;&#x4E0B;&#xFF1A;</p>
+<p></p><figure class="highlight c hljs"><figcaption><span>./target/riscv/helper.h</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-comment">/* Bitmanip Extension */</span></span><br><span class="line">DEF_HELPER_1(pcnt, tl, tl)</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p></p><figure class="highlight c hljs"><figcaption><span>./target/riscv/bitmanip_helper.c</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-comment">/*</span></span><br><span class="line"><span class="hljs-comment"> * RISC-V Bitmanip Extension Helpers for QEMU.</span></span><br><span class="line"><span class="hljs-comment"> */</span></span><br><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&quot;qemu/osdep.h&quot;</span></span></span><br><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&quot;cpu.h&quot;</span></span></span><br><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&quot;exec/exec-all.h&quot;</span></span></span><br><span class="line"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&quot;exec/helper-proto.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="hljs-function">target_ulong <span class="hljs-title">HELPER</span><span class="hljs-params">(pcnt)</span><span class="hljs-params">(target_ulong rs1)</span></span></span><br><span class="line"><span class="hljs-function"></span>{</span><br><span class="line">    target_ulong count = <span class="hljs-number">0</span>;</span><br><span class="line">    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; TARGET_LONG_BITS; i++) {</span><br><span class="line">        count += (rs1 &gt;&gt; i) &amp; <span class="hljs-number">1</span>;;</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-keyword">return</span> count;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure><p></p>
+<p>&#x57FA;&#x672C;&#x4E0A;&#x5C31;&#x662F;&#x5BE6;&#x4F5C;&#x5148;&#x524D;&#x5728; <code>B Extension</code> spec. &#x53CA; Spike &#x4E2D;&#x6240;&#x770B;&#x5230;&#x7684; <code>1 bits</code> &#x500B;&#x6578;&#x8A08;&#x7B97;&#x65B9;&#x5F0F;&#x3002;&#x7531;&#x65BC; <code>pcnt</code> helper function &#x53EA;&#x9700;&#x63A5;&#x6536; <code>rs1</code> &#x66AB;&#x5B58;&#x5668;&#x7684;&#x503C;&#xFF0C;&#x4E26;&#x56DE;&#x50B3;&#x6700;&#x5F8C; <code>1 bits</code> &#x500B;&#x6578;&#x7684;&#x7D50;&#x679C;&#xFF0C;&#x56E0;&#x6B64;&#xFF0C;&#x6211;&#x5011;&#x5B9A;&#x7FA9; <code>pcnt</code> &#x7684; helper function &#x70BA;&#x63A5;&#x6536;&#x4E00; <code>target_ulong</code> &#x578B;&#x614B;&#x7684; <code>rs1</code> &#x4E26;&#x56DE;&#x50B3; <code>target_ulong</code> &#x578B;&#x614B;&#x7684; <code>1 bits</code> &#x500B;&#x6578;&#x7D50;&#x679C;&#x3002;</p>
+<p>&#x6700;&#x5F8C;&#x5225;&#x5FD8;&#x4E86;&#x5C07;&#x6211;&#x5011;&#x65B0;&#x589E;&#x7684; <code>bitmanip_helper.o</code> &#x52A0;&#x5165; compile objects &#x5217;&#x8868;&#xFF1A;</p>
+<p></p><figure class="highlight plain hljs"><figcaption><span>./target/riscv/Makefile.objs</span></figcaption><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">obj-y += translate.o op_helper.o cpu_helper.o cpu.o csr.o fpu_helper.o bitmanip_helper.o gdbstub.o</span><br></pre></td></tr></tbody></table></figure><p></p>
+<hr>
+<p>&#x91CD;&#x65B0;&#x7DE8;&#x8B6F; QEMU&#xFF0C;&#x518D;&#x6B21;&#x57F7;&#x884C; <code>pcnt_example</code>&#xFF1A;</p>
+<pre><code>./qemu/riscv64-linux-user/qemu-riscv64 pcnt_example</code></pre>
+
+<pre><code>num = 187
+# of set bits = 6</code></pre>
+
+<p>&#x9019;&#x6B21; QEMU &#x5C31;&#x53EF;&#x4EE5;&#x6B63;&#x78BA;&#x7684; decode &#x4E26;&#x57F7;&#x884C; <code>pcnt</code> &#x6307;&#x4EE4;&#x4E86;&#x3002;</p>
+<hr>
+<p>&#x5728; QEMU &#x4E2D;&#x65B0;&#x589E;&#x6307;&#x4EE4;&#x7684;&#x6D41;&#x7A0B;&#x5927;&#x81F4;&#x5C31;&#x5982;&#x540C;&#x672C;&#x6587;&#x6240;&#x4ECB;&#x7D39;&#xFF0C;&#x4E0D;&#x904E;&#x7531;&#x65BC; <code>pcnt</code> &#x6307;&#x4EE4;&#x53EA;&#x662F;&#x55AE;&#x7D14;&#x7684; bit operation &#x6307;&#x4EE4;&#xFF0C;&#x6C92;&#x6709;&#x50CF; <code>csr</code> &#x76F8;&#x95DC;&#x6307;&#x4EE4;&#x6703;&#x6D89;&#x53CA; <code>CPURISCVState</code> &#x7684;&#x66F4;&#x65B0;&#xFF0C;&#x4EE5;&#x53CA;&#x50CF; <code>jal</code> &#x6307;&#x4EE4;&#x6703;&#x6D89;&#x53CA; <code>DisasContext</code> &#x7684;&#x5224;&#x65B7;&#xFF0C;&#x56E0;&#x6B64;&#x5BE6;&#x4F5C;&#x8D77;&#x4F86;&#x76F8;&#x5C0D;&#x7C21;&#x55AE;&#x3002;&#x82E5;&#x6B32;&#x8B93; QEMU &#x652F;&#x63F4;&#x4E0D;&#x8AD6;&#x662F; <code>B Extension</code> &#x6216;&#x662F; <code>V Extension</code> &#x7684;&#x5176;&#x4ED6;&#x6307;&#x4EE4;&#xFF0C;&#x5C31;&#x662F;&#x5F97;&#x597D;&#x597D; K spec. &#x4E26;&#x4E00;&#x500B;&#x4E00;&#x500B;&#x65B0;&#x589E;&#x4E86;&#x3002;</p>
+<p>&#x53E6;&#x5916;&#x6700;&#x8FD1;&#x525B;&#x597D; C-Sky Microsystems &#x7684; <code>LIU Zhiwei &amp;lt;zhiwei_liu@c-sky.com&amp;gt;</code> &#x5728;&#x5BE6;&#x4F5C; <code>V Extension</code> &#x7684; configure instructions&#xFF1A;<code>vsetvl</code> &#x53CA; <code>vsetvli</code>&#xFF0C;&#x6BD4;&#x8D77;&#x672C;&#x6587;&#x6240;&#x4ECB;&#x7D39;&#x4E4B; <code>B Extension</code> &#x7684; <code>pcnt</code> &#x6307;&#x4EE4;&#x8981;&#x4F86;&#x5F97;&#x8907;&#x96DC;&#x5F97;&#x591A;&#xFF0C;<a href="https://github.com/patchew-project/qemu/commit/04f8d9c87bf88fabd1221f8758187ba1fa5628f0" target="_blank" rel="noopener">patches</a> &#x4ECD;&#x5728;&#x88AB; reviewed &#x4E2D;&#xFF0C;&#x4E5F;&#x53EF;&#x4EE5;&#x505A;&#x70BA;&#x53C3;&#x8003;&#x3002;</p>
+<p>&#x672C;&#x6587;&#x6240;&#x5C0D; QEMU &#x505A;&#x7684;&#x4FEE;&#x6B63;&#xFF0C;&#x53EF;&#x4EE5;&#x53C3;&#x8003;&#x6B64; <a href="https://github.com/frankchang0125/qemu/commit/3ca50fb830ab3f2b9a1b806e2240ea5bff9dfabf" target="_blank" rel="noopener">commit</a>&#x3002;</p>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/QEMU/">#QEMU</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/RISC-V/">#RISC-V</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop is-hidden-mobile article-nav-prev">
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/QEMU-Decodetree-%E8%AA%9E%E6%B3%95%E4%BB%8B%E7%B4%B9-Part-2/">QEMU Decodetree 語法介紹 (Part 2.)</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2020 Frank Chang&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/" target="_blank" rel="noopener">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+</body>
+</html>
